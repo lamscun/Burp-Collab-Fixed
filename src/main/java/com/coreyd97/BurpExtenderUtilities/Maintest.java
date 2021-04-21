@@ -17,6 +17,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import burp.BurpExtender;
+
 public class Maintest {
 	public static void main(String[] args) throws IOException  {
 //		System.out.print("SSSSSSSSSs");
@@ -93,5 +95,23 @@ public class Maintest {
         JsonObject jsonObject = new JsonParser().parse(json).getAsJsonObject();
 
         return jsonObject;
+	}
+	
+	public static String getUserOptions_payloadPath(String filePath) throws IOException {
+
+		File file = new File(filePath);
+		BufferedReader br = new BufferedReader(new FileReader(file));
+		  
+		String st = "";
+		String ret = "";
+	    while ((st = br.readLine()) != null) {
+		  ret = ret + st;
+	    }
+    	return ret;
+    }
+	
+	public static String getFileName() {
+		// TODO Auto-generated method stub
+		return BurpExtender.filepath.getText();
 	}
 }

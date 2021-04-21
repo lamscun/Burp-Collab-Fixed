@@ -69,6 +69,12 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
     private List<String> biid=new ArrayList<String>();  
     private List<String> cname=new ArrayList<String>();  
     private List<String> collab_id=new ArrayList<String>();  
+    
+    public static JTextField filepath = new JTextField();
+    public static JTextPane l_cname = new JTextPane();
+    public static JTextPane l_collab_id = new JTextPane();
+    
+    public static JTextField logspath =null;
     /**
      * @wbp.parser.entryPoint
      */
@@ -100,7 +106,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 stdout.println(extensionName + " " + extensionVersion);
-                stdout.println("To use Taborator right click in the repeater request tab and select \"Taborator->Insert Collaborator payload\". Use \"Taborator->Insert Collaborator placeholder\" to insert a placeholder that will be replaced by a Collaborator payload in every request. The Taborator placeholder also works in other Burp tools. You can also use the buttons in the Taborator tab to create a payload and poll now.");
+                stdout.println("To use Collab_Fixed right click in the repeater request tab and select \"Collab_Fixed->Insert Collaborator payload\". Use \"Collab_Fixed->Insert Collaborator placeholder\" to insert a placeholder that will be replaced by a Collaborator payload in every request. The Collab_Fixed placeholder also works in other Burp tools. You can also use the buttons in the Collab_Fixed tab to create a payload and poll now.");
                 running = true;
                 try {
                     prefs.registerSetting("config", new TypeToken<HashMap<String, Integer>>() {
@@ -205,21 +211,34 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
                 
                 JButton pollButton = new JButton("Poll now");
                 JTextField numberOfPayloads = new JTextField("1");
+                numberOfPayloads.setMinimumSize(new Dimension(25, 25));
                 
-                JTextField filepath = new JTextField("D:\\Techlab\\H!\\TOOLS\\taborator\\collab_config.json");
-                JTextField logspath = new JTextField("D:\\Techlab\\H!\\TOOLS\\taborator\\collab_logs.json");
+                JTextField timePollAuto = new JTextField("10");
+                timePollAuto.setMinimumSize(new Dimension(25, 25));
+                
+                filepath = new JTextField("D:\\Techlab\\H!\\TOOLS\\taborator\\collab_config.json");
+                filepath.setMinimumSize(new Dimension(200, 25));
+                logspath = new JTextField("D:\\Techlab\\H!\\TOOLS\\taborator\\collab_logs.json");
+                logspath.setMinimumSize(new Dimension(200, 25));
                 
                 JLabel l_biid = new JLabel();
                 l_biid.setText("BIID: null");
                 
-                JLabel l_collab_id = new JLabel();
+                l_collab_id = new JTextPane();
                 l_collab_id.setText("ID: Null");
+                l_collab_id.setEditable(false);
+                l_collab_id.setBackground(null); 
+                l_collab_id.setBorder(null);
                 
-                JLabel l_cname = new JLabel();
+                l_cname = new JTextPane();
                 l_cname.setText("CNAME: Null");
+                l_cname.setEditable(false);
+                l_cname.setBackground(null); 
+                l_cname.setBorder(null);
                 
                 numberOfPayloads.setPreferredSize(new Dimension(50, 25));
                 filepath.setPreferredSize(new Dimension(350, 25));
+                logspath.setPreferredSize(new Dimension(350, 25));
                 
                 
                 JLabel l_logs_file = new JLabel();
@@ -231,18 +250,8 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
                 	@Override
                 	public void mouseClicked(MouseEvent e) {
                 		try {
-							 String collab_config = getUserOptions_payloadPath(getFileName());
-							 
-							 JsonObject jsonObject = new JsonParser().parse(collab_config).getAsJsonObject();
-							 JsonArray jArray  =  (JsonArray) jsonObject.get("data");
-							 JsonObject jsonObject1 = new JsonParser().parse( jArray.get(1).toString()).getAsJsonObject();
-							 biid.add(jsonObject1.get("biid").toString().replace("\"", ""));
-							 cname.add(jsonObject1.get("cname").toString().replace("\"", ""));
-							 collab_id.add(jsonObject1.get("collab_id").toString().replace("\"", ""));
-							 
-							 l_biid.setText("BIID: " + biid.get(0));
-							 l_collab_id.setText("ID: " + collab_id.get(0));
-							 l_cname.setText("CNAME: " + cname.get(0));
+							loadConfigFromFile(); 
+                			
 							 
 						} catch (IOException e1) {
 							// TODO Auto-generated catch block
@@ -250,25 +259,22 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 						}
                 	}
                 	
-                	private String getUserOptions_payloadPath(String filePath) throws IOException {
-
-                		File file = new File(filePath);
-                		BufferedReader br = new BufferedReader(new FileReader(file));
-                		  
-                		String st = "";
-                		String ret = "";
-            		    while ((st = br.readLine()) != null) {
-            			  ret = ret + st;
-            		    }
-                    	return ret;
-                    }
-
-					
-
-					private String getFileName() {
-						// TODO Auto-generated method stub
-						return filepath.getText();
+                	private void loadConfigFromFile() throws IOException {
+                		 String collab_config = Maintest.getUserOptions_payloadPath(Maintest.getFileName());
+						 
+						 JsonObject jsonObject = new JsonParser().parse(collab_config).getAsJsonObject();
+						 JsonArray jArray  =  (JsonArray) jsonObject.get("data");
+						 JsonObject jsonObject1 = new JsonParser().parse( jArray.get(1).toString()).getAsJsonObject();
+						 biid.add(jsonObject1.get("biid").toString().replace("\"", ""));
+						 cname.add(jsonObject1.get("cname").toString().replace("\"", ""));
+						 collab_id.add(jsonObject1.get("collab_id").toString().replace("\"", ""));
+						 
+//						 l_biid.setText("BIID: " + biid.get(0));
+						 l_collab_id.setText("ID: " + collab_id.get(0) + ".burpcollaborator.net");
+						 l_cname.setText("CNAME: " + cname.get(0));
+						
 					}
+
                 });
                 
                 
@@ -298,32 +304,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
                         pollNow = true;
                         
                       //Custom code
-                        
-                        try {
-                        	
-                        	String param_biid = biid.get(0);
-                        	
-                        	if(param_biid !="") {
-                        		
-                        		stdout.println("biid: "+ biid);
-                        		JsonObject body = Maintest.getNewRecord(param_biid);
-                        		if(body.has("responses")) {
-                        		
-                        			stdout.println("response: "+ body.get("responses"));
-                        			JsonArray jArray  =  (JsonArray) body.get("responses");
-                        			if(jArray.size() > 0) {
-                                        insertInteractions(jArray);
-                                    } 
-                        		}
-                        	} else {
-                        		stdout.println("Else 1");
-                        	}
-                        	
-						 
-						} catch (IOException e1) {
-							e1.printStackTrace();
-						}
-                        
+//                        pollNowWithFixedCollab();
                         //Custom code
                         
                         if(isSleeping) {
@@ -336,25 +317,27 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
                 topPanel.add(exportBtn, createConstraints(1, 2, 1, GridBagConstraints.NONE));
                 topPanel.add(filter, createConstraints(2, 2, 1, GridBagConstraints.NONE));
                 topPanel.add(createCollaboratorPayloadWithTaboratorCmd, createConstraints(3, 2, 1, GridBagConstraints.NONE));
-                topPanel.add(pollButton, createConstraints(4, 2, 1, GridBagConstraints.NONE));
+                topPanel.add(pollButton, createConstraints(6, 2, 1, GridBagConstraints.NONE));
                 
 //                topPanel.add(textFileName, createConstraints(4, 2, 1, GridBagConstraints.NONE));
                 
                 createCollaboratorPayload.setPreferredSize(new Dimension(180, 30));
                 createCollaboratorPayload.setMaximumSize(new Dimension(180, 30));
-                topPanel.add(numberOfPayloads, createConstraints(5,2,1, GridBagConstraints.NONE));
+//                topPanel.add(numberOfPayloads, createConstraints(5,2,1, GridBagConstraints.NONE));
+                
+                topPanel.add(timePollAuto, createConstraints(5,2,1, GridBagConstraints.NONE));
                 
                 topPanel.add(filepath, createConstraints(2,3,1, GridBagConstraints.NONE));
                 topPanel.add(btnLoadFile, createConstraints(1,3,1, GridBagConstraints.NONE));
                 
                 topPanel.add(l_collab_id, createConstraints(3,3,1, GridBagConstraints.NONE));
-                topPanel.add(l_biid, createConstraints(4,3,1, GridBagConstraints.NONE));
+//                topPanel.add(l_biid, createConstraints(4,3,1, GridBagConstraints.NONE));
                 topPanel.add(l_cname, createConstraints(5,3,1, GridBagConstraints.NONE));
                 
                 topPanel.add(l_logs_file, createConstraints(1,4,1, GridBagConstraints.NONE));
                 topPanel.add(logspath, createConstraints(2,4,1, GridBagConstraints.NONE));
                 
-                topPanel.add(createCollaboratorPayload, createConstraints(6, 2, 1, GridBagConstraints.NONE));
+                topPanel.add(createCollaboratorPayload, createConstraints(4, 2, 1, GridBagConstraints.NONE));
                 panel.add(topPanel, BorderLayout.NORTH);
                 panel.addComponentListener(new ComponentAdapter() {
                     @Override
@@ -644,10 +627,30 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
                 };
                 collaboratorTable.setDefaultRenderer(Object.class, tableCellRender);
                 collaboratorTable.setDefaultRenderer(Number.class, tableCellRender);
+                
+//                loadConfigFromFile();
+                
                 Runnable collaboratorRunnable = new Runnable() {
                     public void run() {
                         stdout.println("Taborator running...");
                         loadSettings();
+                        try {
+							loadConfigFromFile();
+						} catch (IOException e1) {
+							e1.printStackTrace();
+						} 
+                        
+                        //
+                        
+                        
+                        
+                        //
+                        
+                        
+                        interactionHistory = getLogs();
+
+                        //
+                        
                         for (Map.Entry<Integer, HashMap<String, String>> data : interactionHistory.entrySet()) {
                             int id = data.getKey();
                             HashMap<String, String> interaction = data.getValue();
@@ -661,18 +664,20 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
                             if(pollNow) {
                                 List<IBurpCollaboratorInteraction> interactions = collaborator.fetchAllCollaboratorInteractions();
                                 
-                                
+                                pollNowWithFixedCollab();
                                 
                                 
                                 stdout.println(interactions);
+                                
                                 if(interactions.size() > 0) {
                                     insertInteractions(interactions);
+                                    saveLogs();
                                 }
                                 pollNow = false;
                             }
                             try {
                                 isSleeping = true;
-                                pollThread.sleep(POLL_EVERY_MS);
+                                pollThread.sleep( Long.parseLong(timePollAuto.getText()) * 1000);
                                 isSleeping = false;
                                 pollCounter++;
                                 if(pollCounter > 5) {
@@ -683,7 +688,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
                                 }
                             } catch (InterruptedException e) {
                                 if(shutdown) {
-                                    stdout.println("Taborator shutdown.");
+                                    stdout.println("Collab_Fixed shutdown.");
                                     return;
                                 } else {
                                     continue;
@@ -691,13 +696,95 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 
                             }
                         }
-                        stdout.println("Taborator shutdown.");
+                        stdout.println("Collab_Fixed shutdown.");
                     }
+
 
 					
                 };
                 pollThread = new Thread(collaboratorRunnable);
                 pollThread.start();
+            }
+
+            private void loadConfigFromFile() throws IOException {
+       		 String collab_config = Maintest.getUserOptions_payloadPath(Maintest.getFileName());
+				 
+				 JsonObject jsonObject = new JsonParser().parse(collab_config).getAsJsonObject();
+				 JsonArray jArray  =  (JsonArray) jsonObject.get("data");
+				 JsonObject jsonObject1 = new JsonParser().parse( jArray.get(1).toString()).getAsJsonObject();
+				 biid.add(jsonObject1.get("biid").toString().replace("\"", ""));
+				 cname.add(jsonObject1.get("cname").toString().replace("\"", ""));
+				 collab_id.add(jsonObject1.get("collab_id").toString().replace("\"", ""));
+				 
+//				 l_biid.setText("BIID: " + biid.get(0));
+				 l_collab_id.setText("ID: " + collab_id.get(0) + ".burpcollaborator.net");
+				 l_cname.setText("CNAME: " + cname.get(0));
+				
+			}
+            
+            private void saveLogs()
+            {
+            	try {
+                    FileOutputStream fileOut =
+                    new FileOutputStream(logspath.getText());
+                    ObjectOutputStream out = new ObjectOutputStream(fileOut);
+                    out.writeObject(interactionHistory);
+                    out.close();
+                    fileOut.close();
+                    stdout.printf("Serialized data is saved in "+ logspath.getText());
+                 } catch (IOException i) {
+                    i.printStackTrace();
+                 }
+            	
+            }
+            
+            private HashMap<Integer, HashMap<String, String>> getLogs()
+            {
+            	HashMap<Integer, HashMap<String, String>> interactionHistory_save = new HashMap<>();
+            	try {
+                    FileInputStream fileIn = new FileInputStream(logspath.getText());
+                    ObjectInputStream in = new ObjectInputStream(fileIn);
+                    interactionHistory_save = (HashMap<Integer, HashMap<String, String>>) in.readObject();
+                    in.close();
+                    fileIn.close();
+                    return interactionHistory_save;
+                 } catch (IOException i) {
+                    i.printStackTrace();
+                    return interactionHistory_save;
+                 } catch (ClassNotFoundException c) {
+                	 stdout.println("Employee class not found");
+                    c.printStackTrace();
+                    return interactionHistory_save;
+                 }
+            	
+            }
+            
+            private void pollNowWithFixedCollab() {
+            	try {
+                	
+                	String param_biid = biid.get(0);
+                	stdout.println("param_biid:"+param_biid);
+                	if(param_biid !="") {
+                		
+                		stdout.println("biid: "+ biid);
+                		JsonObject body = Maintest.getNewRecord(param_biid);
+                		if(body.has("responses")) {
+                		
+                			stdout.println("response: "+ body.get("responses"));
+                			JsonArray jArray  =  (JsonArray) body.get("responses");
+                			if(jArray.size() > 0) {
+                                insertInteractions(jArray);
+                                saveLogs();
+                            } 
+                		}
+                	} else {
+                		stdout.println("Else 1");
+                	}
+                	
+				 
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
             }
         });
     }
@@ -846,7 +933,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 		    {
 		        Object keyvalue = jsonObject.get(keyStr);
 		        
-		        stdout.println("key: "+ keyStr + " value: " + keyvalue);
+//		        stdout.println("key: "+ keyStr + " value: " + keyvalue);
 
 		        
 		        
@@ -899,7 +986,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
             interactionHistory.put(rowID, interactionHistoryItem);
             
             hasInteractions = true;
-            stdout.println("CCCCCCCC");
+//            stdout.println("CCCCCCCC");
         }
         updateTab(hasInteractions);
     }
