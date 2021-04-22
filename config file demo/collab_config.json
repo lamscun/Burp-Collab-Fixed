@@ -1,0 +1,19 @@
+{
+    "data": [{
+        "cname": "burp.test.com",
+        "biid": "ivU64dxE0BFsomm4Rs5iNwOBjmtdMlOJla8k1fphAwo%3d",
+        "collab_id": "theha6644z897vdje6i1r8xsfjl99y"
+    }, {
+        "cname": "burp1.test.com",
+        "biid": "2%2fX2WD2JXU%2fSfiZJkVm2tLUp5k38iLFjFEcDsOGde%2bY%3d",
+        "collab_id": "lb03c5sv3zv0ie4x2kytonqknbt1hq"
+    }, {
+        "cname": "",
+        "biid": "",
+        "collab_id": ""
+    }, {
+        "cname": "",
+        "biid": "",
+        "collab_id": ""
+    }]
+}
