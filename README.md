@@ -11,6 +11,6 @@ Install from the BApp store.
 
 # Screenshots
 
-![Tab Screenshot](hhttps://github.com/123Pro123Pro/Burp-Collab-Fixed/blob/master/images/screenshot-tab.png)
+![Tab Screenshot](https://github.com/123Pro123Pro/Burp-Collab-Fixed/blob/main/images/screenshot-tab.png)
 
 ![Client Screenshot](https://github.com/123Pro123Pro/Burp-Collab-Fixed/blob/main/images/screenshot-client1.png)
