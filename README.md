@@ -1,7 +1,9 @@
 Edit code from https://github.com/PortSwigger/taborator.git
 
 # Collab_Fixed
-A Burp extension to show and choose FIXED Collaborator Client in a tab along with the number of interactions in the tab name.
++ A Burp extension to show and choose FIXED Collaborator Client in a tab along with the number of interactions in the tab name.
++ This tools also auto logs records into a files 
+
 
 # Installation and usage
 
