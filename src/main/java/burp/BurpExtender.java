@@ -251,7 +251,6 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
                 	public void mouseClicked(MouseEvent e) {
                 		try {
 							loadConfigFromFile(); 
-                			
 							 
 						} catch (IOException e1) {
 							// TODO Auto-generated catch block
@@ -259,21 +258,24 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 						}
                 	}
                 	
-                	private void loadConfigFromFile() throws IOException {
-                		 String collab_config = Maintest.getUserOptions_payloadPath(Maintest.getFileName());
-						 
-						 JsonObject jsonObject = new JsonParser().parse(collab_config).getAsJsonObject();
-						 JsonArray jArray  =  (JsonArray) jsonObject.get("data");
-						 JsonObject jsonObject1 = new JsonParser().parse( jArray.get(1).toString()).getAsJsonObject();
-						 biid.add(jsonObject1.get("biid").toString().replace("\"", ""));
-						 cname.add(jsonObject1.get("cname").toString().replace("\"", ""));
-						 collab_id.add(jsonObject1.get("collab_id").toString().replace("\"", ""));
-						 
-//						 l_biid.setText("BIID: " + biid.get(0));
-						 l_collab_id.setText("ID: " + collab_id.get(0) + ".burpcollaborator.net");
-						 l_cname.setText("CNAME: " + cname.get(0));
-						
-					}
+//                	private void loadConfigFromFile() throws IOException {
+//                		
+//                		 String collab_config = Maintest.getUserOptions_payloadPath(Maintest.getFileName());
+//                		 stdout.println("collab_config:" + collab_config);
+//						 JsonObject jsonObject = new JsonParser().parse(collab_config).getAsJsonObject();
+//						 JsonArray jArray  =  (JsonArray) jsonObject.get("data");
+//						 JsonObject jsonObject1 = new JsonParser().parse( jArray.get(0).toString()).getAsJsonObject();
+//						 biid.add(jsonObject1.get("biid").toString().replace("\"", ""));
+//						 cname.add(jsonObject1.get("cname").toString().replace("\"", ""));
+//						 collab_id.add(jsonObject1.get("collab_id").toString().replace("\"", ""));
+//						 
+////						 l_biid.setText("BIID: " + biid.get(0));
+//						 l_collab_id.setText("ID: " + collab_id.get(0) + ".burpcollaborator.net");
+//						 l_cname.setText("CNAME: " + cname.get(0));
+//						 
+//						 stdout.println("loadConfigFromFile");
+//						
+//					}
 
                 });
                 
@@ -711,14 +713,17 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				 
 				 JsonObject jsonObject = new JsonParser().parse(collab_config).getAsJsonObject();
 				 JsonArray jArray  =  (JsonArray) jsonObject.get("data");
-				 JsonObject jsonObject1 = new JsonParser().parse( jArray.get(1).toString()).getAsJsonObject();
+				 JsonObject jsonObject1 = new JsonParser().parse( jArray.get(0).toString()).getAsJsonObject();
+//				 biid.set(0, jsonObject1.get("biid").toString().replace("\"", ""));
+//				 cname.set(0,jsonObject1.get("cname").toString().replace("\"", ""));
+//				 collab_id.set(0,jsonObject1.get("collab_id").toString().replace("\"", ""));
 				 biid.add(jsonObject1.get("biid").toString().replace("\"", ""));
 				 cname.add(jsonObject1.get("cname").toString().replace("\"", ""));
 				 collab_id.add(jsonObject1.get("collab_id").toString().replace("\"", ""));
 				 
 //				 l_biid.setText("BIID: " + biid.get(0));
-				 l_collab_id.setText("ID: " + collab_id.get(0) + ".burpcollaborator.net");
-				 l_cname.setText("CNAME: " + cname.get(0));
+				 l_collab_id.setText("ID: " + collab_id.get(collab_id.size()-1) + ".burpcollaborator.net");
+				 l_cname.setText("CNAME: " + cname.get(collab_id.size()-1));
 				
 			}
             
