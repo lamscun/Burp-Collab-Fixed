@@ -8,7 +8,7 @@ Edit code from https://github.com/PortSwigger/taborator.git
 # Installation and usage
 
 - Import your config_collab.json file:
-+ in config_collab.json you have to enter your "biid" (can use wireshark, tshark, tcpdump to get your biid from burp suite), your collaborator id, your CNAME for this collaborator id (optional)
++ in config_collab.json you have to enter your "biid" (can use wireshark, tshark, tcpdump to get your biid from burp suite, Note: need to set Project Options > Misc > Poll over unencypted HTTP > Checked), your collaborator id, your CNAME for this collaborator id (optional)
  ![Client Screenshot](https://github.com/123Pro123Pro/Burp-Collab-Fixed/blob/main/images/config.png)
   ![Client Screenshot](https://github.com/123Pro123Pro/Burp-Collab-Fixed/blob/main/images/wireshark_get_biid.png)
 - Choose where you want to save logs records.
