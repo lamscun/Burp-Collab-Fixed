@@ -239,7 +239,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				});
 				
 				JComboBox filter = new JComboBox();
-				filter.addItem("All interactions");
+				filter.addItem("All");
 				filter.addItem("DNS");
 				filter.addItem("HTTP");
 				filter.addItem("SMTP");
@@ -497,7 +497,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				highlightMenu.add(generateMenuItem(collaboratorTable, Color.decode("0xfa63fa"), "HTTP", Color.black));
 				highlightMenu.add(generateMenuItem(collaboratorTable, Color.decode("0xb1b1b1"), "HTTP", Color.black));
 				popupMenu.add(highlightMenu);
-				JMenuItem clearMenuItem = new JMenuItem("Clear");
+				JMenuItem clearMenuItem = new JMenuItem("Clear All");
 				clearMenuItem.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
@@ -524,6 +524,46 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 					}
 				});
 				popupMenu.add(clearMenuItem);
+				
+				JMenuItem deleteSelectedMenu = new JMenuItem("Delete Selected");
+				deleteSelectedMenu.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						int answer = JOptionPane.showConfirmDialog(null,
+								"This will delete this items, are you sure?");
+						TableModel model = (DefaultTableModel) collaboratorTable.getModel();
+						if (answer == 0) {
+							int[] row_ids = collaboratorTable.getSelectedRows();
+							
+							for (int rowId : row_ids) {
+								int modelRow = collaboratorTable.convertRowIndexToModel(rowId);
+								int id = (int) collaboratorTable.getModel().getValueAt(modelRow, 0);
+								
+								if (!readRows.contains(id)) {
+									unread--;
+								}
+								stdout.print(id);
+								// Delete in history
+								interactionHistory.remove(id);
+								// Delete in table UI
+								((DefaultTableModel) model).removeRow(rowId);
+								
+								// After delete a items, need to decrease index from 1
+								for( int i=0; i<row_ids.length; i++) {
+									row_ids[i]--;
+								}
+									
+							}
+							
+							
+							
+
+						}
+						saveLogs();
+						collaboratorTable.clearSelection();
+					}
+				});
+				popupMenu.add(deleteSelectedMenu);
 				collaboratorTable.setComponentPopupMenu(popupMenu);
 
 				JScrollPane collaboratorScroll = new JScrollPane(collaboratorTable);
