@@ -58,6 +58,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.BorderFactory;
@@ -91,8 +92,8 @@ import javax.swing.text.StyleConstants;
 
 /* loaded from: collab_fixed_v5.jar:burp/BurpExtender.class */
 public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListener, IContextMenuFactory, IHttpListener {
-	private String extensionName = "Collab_Fixed_v5.3";
-	private String extensionVersion = "2.0";
+	private String extensionName = "Collab_Fixed_v5.4";
+	private String extensionVersion = "5.4";
 	private IBurpExtenderCallbacks callbacks;
 	private IExtensionHelpers helpers;
 	private PrintWriter stderr;
@@ -140,8 +141,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 
 	public static String collab_fixed_config_file_name = "collab_fixed_config.json";
 	public static String collab_fixed_logs_file_name = "collab_fixed_logs.json";
-	 
-	
+
 	/**
 	 * @wbp.parser.entryPoint
 	 */
@@ -170,12 +170,14 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				System.err.println("Error Output:" + errorMessage);
 			}
 		}, callbacks);
-		
+
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				stdout.println(extensionName + " " + extensionVersion);
 				stdout.println(
-						"To use Collab_Fixed right click in the repeater request tab and select \"Collab_Fixed->Insert Collaborator payload\". Use \"Collab_Fixed->Insert Collaborator placeholder\" to insert a placeholder that will be replaced by a Collaborator payload in every request. The Collab_Fixed placeholder also works in other Burp tools. You can also use the buttons in the Collab_Fixed tab to create a payload and poll now.");
+						"\n---------------\nTo use Collab_Fixed right click in the repeater request tab and select \"Collab_Fixed->Insert Collaborator payload\". \nUse \"Collab_Fixed->Insert Collaborator placeholder\" to insert a placeholder that will be replaced by a Collaborator payload in every request. \nThe Collab_Fixed placeholder also works in other Burp tools. You can also use the buttons in the Collab_Fixed tab to create a payload and poll now."
+						+ "\n\n- Dev by: @lamscun"
+						+ "\n- Update random by: @ChiHuynhMinh\n\n---------------\n");
 				running = true;
 				try {
 					prefs.registerSetting("config", new TypeToken<HashMap<String, Integer>>() {
@@ -199,10 +201,9 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				} catch (Throwable e) {
 					System.err.println("Error registering settings:" + e);
 				}
-				
-				
+
 				// Main Panel
-				
+
 				panel = new JPanel(new BorderLayout());
 				JPanel topPanel = new JPanel();
 				topPanel.setLayout(new GridBagLayout());
@@ -237,7 +238,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 						}
 					}
 				});
-				
+
 				JComboBox filter = new JComboBox();
 				filter.addItem("All");
 				filter.addItem("DNS");
@@ -262,25 +263,25 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 						}
 					}
 				});
-				
+
 				/*
-				JButton createCollaboratorPayloadWithTaboratorCmd = new JButton("Collab Fixed commands & copy");
-				createCollaboratorPayloadWithTaboratorCmd.addActionListener(new ActionListener() {
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						createdCollaboratorPayload = true;
-						String payload = collaborator.generatePayload(true)
-								+ "?Collab_Fixed=comment:Test;bgColour:0x000000;textColour:0xffffff";
-						Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(payload),
-								null);
-					}
-				});
-				*/
+				 * JButton createCollaboratorPayloadWithTaboratorCmd = new
+				 * JButton("Collab Fixed commands & copy");
+				 * createCollaboratorPayloadWithTaboratorCmd.addActionListener(new
+				 * ActionListener() {
+				 * 
+				 * @Override public void actionPerformed(ActionEvent e) {
+				 * createdCollaboratorPayload = true; String payload =
+				 * collaborator.generatePayload(true) +
+				 * "?Collab_Fixed=comment:Test;bgColour:0x000000;textColour:0xffffff";
+				 * Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new
+				 * StringSelection(payload), null); } });
+				 */
 
 				JButton pollButton = new JButton("Poll");
-				
+
 				JButton randomButton = new JButton("Random ID");
-				
+
 				JTextField numberOfPayloads = new JTextField("1");
 				numberOfPayloads.setMinimumSize(new Dimension(25, 25));
 
@@ -300,22 +301,23 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				logspath = new JTextField(jarPath + collab_fixed_logs_file_name);
 				logspath.setMinimumSize(new Dimension(200, 25));
 
-
-
 				btn_domain_id = new JButton("null");
 				btn_domain_id.setBackground(null);
 				btn_domain_id.setBorder(null);
 				btn_domain_id.setMaximumSize(new Dimension(450, 30));
 				btn_domain_id.setPreferredSize(new Dimension(450, 25));
 				btn_domain_id.setMinimumSize(new Dimension(250, 25));
-				
+
 				btn_domain_id.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection( java.lang.System.currentTimeMillis()/1000 +"."+ btn_domain_id.getText()), (ClipboardOwner) null);
+						Toolkit.getDefaultToolkit().getSystemClipboard()
+								.setContents(new StringSelection(
+										java.lang.System.currentTimeMillis() / 1000 + "." + btn_domain_id.getText()),
+										(ClipboardOwner) null);
 					}
 				});
-				
+
 				l_cname = new JTextPane();
 				l_cname.setText("CNAME: Null");
 				l_cname.setEditable(false);
@@ -325,7 +327,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				numberOfPayloads.setPreferredSize(new Dimension(50, 25));
 				// filepath.setPreferredSize(new Dimension(350, 25));
 				// logspath.setPreferredSize(new Dimension(350, 25));
-				
+
 				biidText.setPreferredSize(new Dimension(350, 25));
 				biidText.setMinimumSize(new Dimension(200, 25));
 				collabIdText.setPreferredSize(new Dimension(350, 25));
@@ -345,7 +347,6 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 							saveConfigToFile();
 							loadConfigFromFile2();
 
-							
 						} catch (IOException e1) {
 							// TODO Auto-generated catch block
 							e1.printStackTrace();
@@ -379,53 +380,66 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 					@Override
 					public void actionPerformed(ActionEvent e) {
 						pollNow = true;
-                        // pollNowWithFixedCollab();
+						pollNowWithFixedCollab();
 						if (isSleeping) {
 							pollThread.interrupt();
 						}
 					}
 				});
-				
-				
+
 				pollButton.setPreferredSize(new Dimension(80, 30));
 				pollButton.setMaximumSize(new Dimension(80, 30));
-				
+
 				createCollaboratorPayload.setPreferredSize(new Dimension(180, 30));
 				createCollaboratorPayload.setMaximumSize(new Dimension(180, 30));
-				
+
 				topPanel.add(l_collabIdText, createConstraints(1, 1, 1, GridBagConstraints.NONE));
 				topPanel.add(collabIdText, createConstraints(2, 1, 1, GridBagConstraints.NONE));
 				topPanel.add(btn_domain_id, createConstraints(3, 1, 1, GridBagConstraints.NONE));
 				topPanel.add(pollButton, createConstraints(4, 1, 1, GridBagConstraints.NONE));
-				
+
 				topPanel.add(l_biidText, createConstraints(1, 2, 1, GridBagConstraints.NONE));
 				topPanel.add(biidText, createConstraints(2, 2, 1, GridBagConstraints.NONE));
 				topPanel.add(l_cname, createConstraints(3, 2, 1, GridBagConstraints.NONE));
 				topPanel.add(timePollAuto, createConstraints(4, 2, 1, GridBagConstraints.NONE));
-				
-				
+
 				topPanel.add(b_loadConfig, createConstraints(1, 3, 1, GridBagConstraints.NONE));
 				topPanel.add(createCollaboratorPayload, createConstraints(2, 3, 1, GridBagConstraints.NONE));
 				topPanel.add(filter, createConstraints(3, 3, 1, GridBagConstraints.NONE));
 				topPanel.add(exportBtn, createConstraints(4, 3, 1, GridBagConstraints.NONE));
 				topPanel.add(randomButton, createConstraints(5, 3, 1, GridBagConstraints.NONE));
-				
-				
-				
+
 				randomButton.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						int answer = JOptionPane.showConfirmDialog((Component) null, "This will remove your current biid, it can not retake, are you sure?");
-                        if (answer == 0) {
-                            Random r = new Random();
-                            String[] list_random_biids = {"g8zhf3fhiA04IZyUksUl8IM5yQDtUGZMFhWQ0Zwba7k%3d -- l2oayratq3wrna9hjnqvoge3quwkk9.oastify.com", "op2T%2fiCV3GNCepi%2fQWT5eeCY1u1KVc6fXelNiQxEfUM%3d -- 020k3pifltekneo7d74oof30ur0ho6.oastify.com"};
-                            String random_biid = list_random_biids[r.nextInt(list_random_biids.length)];
-                            BurpExtender.biidText.setText(random_biid.split(" -- ")[0]);
-                            BurpExtender.collabIdText.setText(random_biid.split(" -- ")[1].replace(".oastify.com", ""));
-                        }
+						int answer = JOptionPane.showConfirmDialog((Component) null,
+								"This will remove your current biid, it can not retake, are you sure?");
+						if (answer == 0) {
+
+							// Get from custom proxy
+							String ran_collab = collaborator.generatePayload(false);
+							String ran_biid = CustomProxy.getCollabBiid(callbacks, collaborator);
+							stdout.println("Random collab - biid: " + ran_collab + " - " + ran_biid);
+
+							BurpExtender.biidText.setText(ran_biid);
+							BurpExtender.collabIdText.setText(ran_collab);
+							// Get from custom proxy
+
+							/*
+							 * Random r = new Random(); String[] list_random_biids =
+							 * {"g8zhf3fhiA04IZyUksUl8IM5yQDtUGZMFhWQ0Zwba7k%3d -- l2oayratq3wrna9hjnqvoge3quwkk9.oastify.com"
+							 * ,
+							 * "op2T%2fiCV3GNCepi%2fQWT5eeCY1u1KVc6fXelNiQxEfUM%3d -- 020k3pifltekneo7d74oof30ur0ho6.oastify.com"
+							 * }; String random_biid =
+							 * list_random_biids[r.nextInt(list_random_biids.length)];
+							 * BurpExtender.biidText.setText(random_biid.split(" -- ")[0]);
+							 * BurpExtender.collabIdText.setText(random_biid.split(" -- ")[1].replace(
+							 * ".oastify.com", ""));
+							 */
+						}
 					}
 				});
-				
+
 				panel.add(topPanel, BorderLayout.NORTH);
 				panel.addComponentListener(new ComponentAdapter() {
 					@Override
@@ -524,21 +538,20 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 					}
 				});
 				popupMenu.add(clearMenuItem);
-				
+
 				JMenuItem deleteSelectedMenu = new JMenuItem("Delete Selected");
 				deleteSelectedMenu.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						int answer = JOptionPane.showConfirmDialog(null,
-								"This will delete this items, are you sure?");
+						int answer = JOptionPane.showConfirmDialog(null, "This will delete this items, are you sure?");
 						TableModel model = (DefaultTableModel) collaboratorTable.getModel();
 						if (answer == 0) {
 							int[] row_ids = collaboratorTable.getSelectedRows();
-							
+
 							for (int rowId : row_ids) {
 								int modelRow = collaboratorTable.convertRowIndexToModel(rowId);
 								int id = (int) collaboratorTable.getModel().getValueAt(modelRow, 0);
-								
+
 								if (!readRows.contains(id)) {
 									unread--;
 								}
@@ -547,16 +560,13 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 								interactionHistory.remove(id);
 								// Delete in table UI
 								((DefaultTableModel) model).removeRow(rowId);
-								
+
 								// After delete a items, need to decrease index from 1
-								for( int i=0; i<row_ids.length; i++) {
+								for (int i = 0; i < row_ids.length; i++) {
 									row_ids[i]--;
 								}
-									
+
 							}
-							
-							
-							
 
 						}
 						saveLogs();
@@ -598,13 +608,11 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 								interactionsTab.addTab("Description", descriptionPanel);
 								if (interaction.get("type").equals("DNS")) {
 									TaboratorMessageEditorController taboratorMessageEditorController = new TaboratorMessageEditorController();
-									description.setText("DNS lookup of type "
-											+ interaction.get("query_type") + " for the domain name: "
-											+ interaction.get("interaction_id")
+									description.setText("DNS lookup of type " + interaction.get("query_type")
+											+ " for the domain name: " + interaction.get("interaction_id")
 											+ collaborator.getCollaboratorServerLocation() + ".\n\n"
-											+ "From IP address: " + interaction.get("client_ip")
-											+ " at " + interaction.get("time_stamp") + "\n\n"
-											+ interaction.get("sub_domain"));
+											+ "From IP address: " + interaction.get("client_ip") + " at "
+											+ interaction.get("time_stamp") + "\n\n" + interaction.get("sub_domain"));
 									IMessageEditor messageEditor = callbacks
 											.createMessageEditor(taboratorMessageEditorController, false);
 									messageEditor.setMessage(helpers.base64Decode(interaction.get("raw_query")), false);
@@ -821,11 +829,11 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				Runnable collaboratorRunnable = new Runnable() {
 					public void run() {
 						stdout.println("Collab_Fixed running...");
-						
+
 						// String payload1 = collaborator.generatePayload(true);
 						// stdout.println("payload1: " + payload1);
 						// stdout.println(collaborator.fetchCollaboratorInteractionsFor(payload1).toString());
-						
+
 						loadSettings();
 						try {
 							loadConfigFromFile2();
@@ -893,10 +901,10 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				stdout.println("SaveConfigToFile... ");
 				String biid_ = biidText.getText();
 				String collab_id_ = collabIdText.getText();
-				
+
 				stdout.println("biid_: " + biid_);
 				stdout.println("collab_id_: " + collab_id_);
-				
+
 				Map<String, Object> map = new HashMap<>();
 				map.put("biid", biid_);
 				map.put("collab_id", collab_id_);
@@ -926,18 +934,16 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				config_biid = (String) map.get("biid");
 				config_cname = (String) map.get("cname");
 				config_collab_id = (String) map.get("collab_id");
-				
-				
-				
+
 				/*
 				 * StyledDocument doc = l_domain_id.getStyledDocument();
 				 * 
 				 * Style style = l_domain_id.addStyle("Red", null);
 				 * StyleConstants.setForeground(style, Color.red);
 				 */
-			    
+
 				btn_domain_id.setText(config_collab_id + ".oastify.com");
-				
+
 				l_cname.setText("CNAME: " + config_cname);
 				reader.close();
 
@@ -956,6 +962,14 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 					out.writeObject(interactionHistory);
 					out.close();
 					fileOut.close();
+
+					/// Save prefs (colour, readRow, comments,...)
+					FileOutputStream fileOut2 = new FileOutputStream("collab_fixed_prefs.json");
+					ObjectOutputStream out2 = new ObjectOutputStream(fileOut2);
+					out2.writeObject(prefs);
+					out2.close();
+					fileOut2.close();
+					///
 					stdout.printf("Serialized data is saved in " + logspath.getText());
 				} catch (IOException i) {
 					i.printStackTrace();
@@ -972,6 +986,13 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 					interactionHistory_save = (HashMap<Integer, HashMap<String, String>>) in.readObject();
 					in.close();
 					fileIn.close();
+
+					FileInputStream fileIn2 = new FileInputStream("collab_fixed_prefs.json");
+					ObjectInputStream in2 = new ObjectInputStream(fileIn2);
+					prefs = (Preferences) in2.readObject();
+					in2.close();
+					fileIn2.close();
+
 					return interactionHistory_save;
 				} catch (IOException i) {
 					i.printStackTrace();
@@ -998,6 +1019,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 							if (jArray.size() > 0) {
 								insertInteractions(jArray);
 								saveLogs();
+								// TimeUnit.SECONDS.sleep(1);
 							}
 						}
 					} else {
@@ -1008,69 +1030,48 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 					stdout.println("pollNowWithFixedCollab error:");
 					e1.printStackTrace();
 				}
-				
+
 			}
 		});
 	}
 
 	private void insertInteraction(HashMap<String, String> interaction, int rowID) {
-		
+
 		String cmt = "";
-	    if (interaction.get("type").equals("HTTP")){
+		if (interaction.get("type").equals("HTTP")) {
 			cmt = "...view host in Request...";
 		} else {
 			cmt = interaction.get("sub_domain");
 		}
 		model.addRow(new Object[] { rowID, interaction.get("time_stamp"), interaction.get("type"),
 				interaction.get("client_ip"), interaction.get("interaction_id"), cmt });
-		
+
 		/*
-		if (comments.size() > 0) {
-			int actualID = getRealRowID(rowID);
-			if (actualID > -1 && comments.containsKey(actualID)) {
-				String comment = comments.get(actualID);
-				model.setValueAt(comment, actualID, 5);
-			}
-		}
-		
-		
-		if (interaction.get("type").equals("HTTP")) {
-			byte[] collaboratorRequest = helpers.base64Decode(interaction.get("request"));
-			if (helpers.indexOf(collaboratorRequest, helpers.stringToBytes("TaboratorCmd="), true, 0,
-					collaboratorRequest.length) > -1) {
-				IRequestInfo analyzedRequest = helpers.analyzeRequest(collaboratorRequest);
-				List<IParameter> params = analyzedRequest.getParameters();
-				for (int i = 0; i < params.size(); i++) {
-					if (params.get(i).getName().equals("TaboratorCmd")) {
-						String[] commands = params.get(i).getValue().split(";");
-						for (int j = 0; j < commands.length; j++) {
-							String[] command = commands[j].split(":");
-							if (command[0].equals("bgColour")) {
-								try {
-									Color colour = Color.decode(helpers.urlDecode(command[1]));
-									colours.put(rowID, colour);
-								} catch (NumberFormatException e) {
-								}
-							} else if (command[0].equals("textColour")) {
-								try {
-									Color colour = Color.decode(helpers.urlDecode(command[1]));
-									textColours.put(rowID, colour);
-								} catch (NumberFormatException e) {
-								}
-							} else if (command[0].equals("comment")) {
-								String comment = helpers.urlDecode(command[1]);
-								int actualID = getRealRowID(rowID);
-								if (actualID > -1) {
-									model.setValueAt(comment, actualID, 5);
-								}
-							}
-						}
-						break;
-					}
-				}
-			}
-		}
-		*/
+		 * if (comments.size() > 0) { int actualID = getRealRowID(rowID); if (actualID >
+		 * -1 && comments.containsKey(actualID)) { String comment =
+		 * comments.get(actualID); model.setValueAt(comment, actualID, 5); } }
+		 * 
+		 * 
+		 * if (interaction.get("type").equals("HTTP")) { byte[] collaboratorRequest =
+		 * helpers.base64Decode(interaction.get("request")); if
+		 * (helpers.indexOf(collaboratorRequest, helpers.stringToBytes("TaboratorCmd="),
+		 * true, 0, collaboratorRequest.length) > -1) { IRequestInfo analyzedRequest =
+		 * helpers.analyzeRequest(collaboratorRequest); List<IParameter> params =
+		 * analyzedRequest.getParameters(); for (int i = 0; i < params.size(); i++) { if
+		 * (params.get(i).getName().equals("TaboratorCmd")) { String[] commands =
+		 * params.get(i).getValue().split(";"); for (int j = 0; j < commands.length;
+		 * j++) { String[] command = commands[j].split(":"); if
+		 * (command[0].equals("bgColour")) { try { Color colour =
+		 * Color.decode(helpers.urlDecode(command[1])); colours.put(rowID, colour); }
+		 * catch (NumberFormatException e) { } } else if
+		 * (command[0].equals("textColour")) { try { Color colour =
+		 * Color.decode(helpers.urlDecode(command[1])); textColours.put(rowID, colour);
+		 * } catch (NumberFormatException e) { } } else if
+		 * (command[0].equals("comment")) { String comment =
+		 * helpers.urlDecode(command[1]); int actualID = getRealRowID(rowID); if
+		 * (actualID > -1) { model.setValueAt(comment, actualID, 5); } } } break; } } }
+		 * }
+		 */
 	}
 
 	private int getRealRowID(int rowID) {
@@ -1087,7 +1088,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 	private void loadSettings() {
 		try {
 
-        	// stdout.println(" running...");
+			// stdout.println(" running...");
 			HashMap<String, Integer> config = prefs.getSetting("config");
 
 			if (config.size() > 0) {
@@ -1390,21 +1391,20 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 			return request;
 		}
 	}
-	
-	private int getMaxKeyInteractHistory(HashMap<Integer, HashMap<String, String>> interactionHistory) {
-        int max = 0;
-        Iterator<Map.Entry<Integer, HashMap<String, String>>> it = interactionHistory.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<Integer, HashMap<String, String>> data = it.next();
-            int id = data.getKey().intValue();
-            if (id > max) {
-                max = id;
-            }
-        }
-        return max;
-    }
 
-	
+	private int getMaxKeyInteractHistory(HashMap<Integer, HashMap<String, String>> interactionHistory) {
+		int max = 0;
+		Iterator<Map.Entry<Integer, HashMap<String, String>>> it = interactionHistory.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry<Integer, HashMap<String, String>> data = it.next();
+			int id = data.getKey().intValue();
+			if (id > max) {
+				max = id;
+			}
+		}
+		return max;
+	}
+
 	public int[] getHeaderOffsets(byte[] request, String header) {
 		int i = 0;
 		int end = request.length;
