@@ -21,6 +21,8 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.MouseInfo;
+import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.StringSelection;
@@ -95,13 +97,19 @@ import javax.swing.table.TableRowSorter;
 import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 
-
 import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.parser.Parser;
+
+import autopayload.AutoCompleter;
+import autopayload.ExtensionState;
+import logcolor.TableLogColor;
 
 /* loaded from: collab_fixed_v5.jar:burp/BurpExtender.class */
-public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListener, IContextMenuFactory, IHttpListener, AWTEventListener {
-	private String extensionName = "Collab_Fixed_v5.4";
-	private String extensionVersion = "5.4";
+public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListener, IContextMenuFactory, IHttpListener, AWTEventListener   {
+	private String extensionName = "Collab_Fixed_v5.6";
+	private String extensionVersion = "5.6";
 	private IBurpExtenderCallbacks callbacks;
 	private IExtensionHelpers helpers;
 	private PrintWriter stderr;
@@ -139,7 +147,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 	private String config_collab_id = "";
 
 	public static JTextField filepath = new JTextField();
-
+	public static JTabbedPane mainTab = new JTabbedPane();
 	public static JTextPane l_cname = new JTextPane();
 	public static JButton btn_domain_id = new JButton();
 
@@ -166,9 +174,13 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 		callbacks.setExtensionName(extensionName);
 		defaultTabColour = getDefaultTabColour();
 		DefaultGsonProvider gsonProvider = new DefaultGsonProvider();
-		
+
 		Toolkit.getDefaultToolkit().addAWTEventListener(this, AWTEvent.KEY_EVENT_MASK);
 		
+		ExtensionState.setCallbacks(callbacks);
+		Toolkit.getDefaultToolkit().addAWTEventListener(this, AWTEvent.KEY_EVENT_MASK);
+		callbacks.registerExtensionStateListener(this);
+		callbacks.addSuiteTab(this);
 		
 		prefs = new Preferences("Collab_Fixed", gsonProvider, new ILogProvider() {
 			@Override
@@ -187,10 +199,12 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				stdout.println(extensionName + " " + extensionVersion);
 				stdout.println(
 						"\n---------------\nTo use Collab_Fixed right click in the repeater request tab and select \"Collab_Fixed->Insert Collaborator payload\". \nUse \"Collab_Fixed->Insert Collaborator placeholder\" to insert a placeholder that will be replaced by a Collaborator payload in every request. \nThe Collab_Fixed placeholder also works in other Burp tools. You can also use the buttons in the Collab_Fixed tab to create a payload and poll now."
-						+ "\n\n- Dev by: @lamscun"
-						+ "\n- Update v5.3: Allow delete selected rows\n"
-						+ "\n- Update v5.4: Real random Biid by: @ChiHuynhMinh\n"
-						+ "\n- Update v5.5: Hot key Ctrl+ Shift + J for Json Beautifier the selected strings\\n\\n---------------\\n");
+				+ "\n\n- Dev by: @lamscun" + "\n- Update v5.3: Allow delete selected rows\n"
+				+ "\n- Update v5.4: Real random Biid by: @chihuynhminh.\n"
+				+ "\n- Update v5.5: Hot key Ctrl + Shift + F for HTML, XML Beautifier the selected strings.\n"
+				+ "\n- Update v5.5: Hot key Ctrl + Shift + J for Json Beautifier the selected strings."
+				+ "\n- Update v5.6: AutoPayload/AutoComple . Hot key Ctrl + Shift + N for show Payload Table. Hot key Ctrl + Shift + M for hide Payload Table"
+				+ "\n\n---------------\n");
 				running = true;
 				try {
 					prefs.registerSetting("config", new TypeToken<HashMap<String, Integer>>() {
@@ -216,9 +230,17 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				}
 
 				// Main Panel
-
+				
 				panel = new JPanel(new BorderLayout());
 				JPanel topPanel = new JPanel();
+				
+				TableLogColor tableLogColor = new TableLogColor();
+				JPanel topPanel_autoPayload = new JPanel();
+				
+				mainTab.add("Collab_fixed",panel); 
+				mainTab.add("Log Color",tableLogColor.getLogTable()); 
+				mainTab.add("Auto Payload", ExtensionState.getInstance().getAutoCompleterTab()); 
+				
 				topPanel.setLayout(new GridBagLayout());
 				JButton exportBtn = new JButton("Export");
 				exportBtn.addActionListener(new ActionListener() {
@@ -785,13 +807,21 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 									requestMessageEditor.setMessage(collaboratorRequest, true);
 									interactionsTab.addTab("Request to Collaborator",
 											requestMessageEditor.getComponent());
-									
+
 									IMessageEditor responseMessageEditor = callbacks
 											.createMessageEditor(taboratorMessageEditorController, false);
 									responseMessageEditor.setMessage(collaboratorResponse, true);
 									interactionsTab.addTab("Response from Collaborator",
 											responseMessageEditor.getComponent());
+
+									IMessageEditor re_res_burp_logs = callbacks
+											.createMessageEditor(taboratorMessageEditorController, false);
+									re_res_burp_logs.setMessage("Feature is still developing........".getBytes(), true);
+									interactionsTab.addTab("Request & Response from burp logs",
+											re_res_burp_logs.getComponent());
+
 									interactionsTab.setSelectedIndex(1);
+
 								}
 								description.setBorder(BorderFactory.createCompoundBorder(description.getBorder(),
 										BorderFactory.createEmptyBorder(10, 10, 10, 10)));
@@ -1236,7 +1266,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 	 */
 	@Override
 	public Component getUiComponent() {
-		return panel;
+		return mainTab;
 	}
 
 	@Override
@@ -1539,34 +1569,102 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 		return menu;
 	}
 	
+	public int chk = 0;
+	public int chk1 = 0;
+	
 	@Override
 	public void eventDispatched(AWTEvent event) {
 		// stdout.println("eventDispatched");
 		if (event.getSource() instanceof JTextArea) {
-			
+
 			// stdout.println("JS Beautify 2");
 			JTextArea source = ((JTextArea) event.getSource());
-			if (source.getClientProperty("hasListener") == null || !((Boolean) source.getClientProperty("hasListener"))) {
-				//stdout.println("JS Beautify 1");
+			if (source.getClientProperty("hasListener") == null
+					|| !((Boolean) source.getClientProperty("hasListener"))) {
+				// stdout.println("JS Beautify 1");
+				
+				stdout.println("Adding AutoPayload Listener");
+				AutoCompleter t = new AutoCompleter(source);
+				source.getDocument().addDocumentListener(t);
+				source.putClientProperty("hasListener", true);
+				ExtensionState.getInstance().addListener(t);
+				
 				source.addKeyListener(new KeyAdapter() {
 					@Override
 					public void keyPressed(KeyEvent e) {
-						stdout.println("JS Beautify");
-						// Check : Ctrl + Shift + J --> JS Beautify
-						if (e.isControlDown() && e.isShiftDown() && e.getKeyCode() == 74) {
-							// source.getText()
-							String beautiful_json = (new JSONObject(source.getSelectedText())).toString(4);
-							// source.setText(beautiful_json);
-							source.replaceRange(beautiful_json, source.getSelectionStart(), source.getSelectionEnd());
+
+						
+						int keyCode = e.getKeyCode();
+						if (e.isControlDown() && e.isShiftDown()) {
+							// Check : Ctrl + Shift + F --> Formater HTLM, XML 
+							if (keyCode == 70) {
+								stdout.println("Formater HTLM, XML ");
+								Document doc = Jsoup.parse(source.getSelectedText());
+								// doc.outputSettings().prettyPrint(true);
+								source.replaceRange(doc.body().html(),source.getSelectionStart(), source.getSelectionEnd());
+							}
+							// Check : Ctrl + Shift + J --> JSON Beautify
+							if (keyCode == 74) {
+								stdout.println("JS Beautify");
+								// source.getText()
+								String beautiful_json = (new JSONObject(source.getSelectedText())).toString(4);
+								// source.setText(beautiful_json);
+								source.replaceRange(beautiful_json, source.getSelectionStart(),
+										source.getSelectionEnd());
+								
+							}
+							// Check : Ctrl + Shift + N --> Show
+							if (keyCode == 78) {
+								if(chk1==0) {
+									t.suggestionPane.setVisible(true);
+									t.suggestionPane.toFront();
+									chk1=1;
+								} else {
+									t.suggestionPane.setVisible(false);
+									chk1=0;
+								}
+							}
+							// Check : Ctrl + Shift + M  -> Show all
+							if (keyCode == 78) {
+								if(chk==0 ) {
+									t.suggestionPane.setVisible(true);
+									t.suggestionPane.toFront();
+									t.suggestionsModel.addAll(ExtensionState.getInstance().keywords);
+									
+									Point p = MouseInfo.getPointerInfo().getLocation();	
+					            	Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+					            	t.suggestionPane.setSize(350, (screenSize.height*2)/3);
+									t.suggestionPane.setLocation(p.x, screenSize.height/3);
+									t.chk_pos = 1;
+									chk=1;
+								} else {
+									t.suggestionPane.setVisible(false);
+									t.chk_pos = 0;
+									chk=0;
+								}
+							}
 						}
+
+						/*
+						 * if (e.isControlDown() && e.isShiftDown() && keyCode == 74) {
+						 * stdout.println("JS Beautify"); // source.getText() String beautiful_json =
+						 * (new JSONObject(source.getSelectedText())).toString(4); //
+						 * source.setText(beautiful_json); source.replaceRange(beautiful_json,
+						 * source.getSelectionStart(), source.getSelectionEnd()); } // Check : Ctrl +
+						 * Shift + H --> HTML Beautify else { if (e.isControlDown() && e.isShiftDown()
+						 * && keyCode == 72) { // source.getText() stdout.println("HTML Beautify");
+						 * //Document doc = Jsoup.parse(source.getSelectedText()); //
+						 * source.setText(beautiful_json); //source.replaceRange(doc.toString(),
+						 * source.getSelectionStart(), source.getSelectionEnd()); } }
+						 */
 
 					}
 				});
 			}
 		}
-		
+
 	}
-	
+
 	@Override
 	public void extensionUnloaded() {
 		//
@@ -1578,5 +1676,15 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 		pollThread.interrupt();
 		saveSettings();
 		
+		
+		stdout.println("removing listeners");
+		//System.out.println(Arrays.toString(Toolkit.getDefaultToolkit().getAWTEventListeners()));
+
+		Toolkit.getDefaultToolkit().removeAWTEventListener(this);
+		for (AutoCompleter listener : ExtensionState.getInstance().getListeners()) {
+			listener.detachFromSource();
+			listener.getSource().getDocument().removeDocumentListener(listener);
+		}
+
 	}
 }
