@@ -47,7 +47,7 @@ public class AutoCompleter implements DocumentListener, CaretListener{
         COMPLETION
     }
     private MODE mode = MODE.INSERT;
-    private int iframe_width = 350;
+    private int iframe_width = 1200;
     private int iframe_height = 250;
 
     public int chk_pos = 0;
@@ -108,7 +108,7 @@ public class AutoCompleter implements DocumentListener, CaretListener{
                     // Double-click detected
                     int start = getTextReplacementStart();
                     int index = list.locationToIndex(e.getPoint());
-                    String selectedCompletion = suggestionsModel.elementAt(index);
+                    String selectedCompletion = suggestionsModel.elementAt(index).replaceAll("^(.* \\|\\|\\|) ", "");
                     System.out.println(start+1 + " : " + pos+1);
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override

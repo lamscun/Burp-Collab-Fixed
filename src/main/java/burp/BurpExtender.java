@@ -1411,7 +1411,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 	/**
 	 * @wbp.parser.entryPoint
 	 */
-	private GridBagConstraints createConstraints(int x, int y, int gridWidth, int fill) {
+	public static GridBagConstraints createConstraints(int x, int y, int gridWidth, int fill) {
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill = fill;
 		c.weightx = 0;
@@ -1678,7 +1678,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 		
 		
 		stdout.println("removing listeners");
-		//System.out.println(Arrays.toString(Toolkit.getDefaultToolkit().getAWTEventListeners()));
+		stdout.println(Arrays.toString(Toolkit.getDefaultToolkit().getAWTEventListeners()));
 
 		Toolkit.getDefaultToolkit().removeAWTEventListener(this);
 		for (AutoCompleter listener : ExtensionState.getInstance().getListeners()) {

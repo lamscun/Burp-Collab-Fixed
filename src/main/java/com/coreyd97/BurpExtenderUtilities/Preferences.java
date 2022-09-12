@@ -2,8 +2,6 @@ package com.coreyd97.BurpExtenderUtilities;
 
 import burp.IBurpExtenderCallbacks;
 import burp.IHttpRequestResponse;
-import com.coreyd97.BurpExtenderUtilities.TypeAdapter.AtomicIntegerTypeAdapter;
-import com.coreyd97.BurpExtenderUtilities.TypeAdapter.ByteArrayToBase64TypeAdapter;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -15,6 +13,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import com.coreyd97.BurpExtenderUtilities.TypeAdapter.AtomicIntegerTypeAdapter;
+import com.coreyd97.BurpExtenderUtilities.TypeAdapter.ByteArrayToBase64TypeAdapter;
 
 public class Preferences {
 

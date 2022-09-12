@@ -24,6 +24,7 @@ import com.google.gson.GsonBuilder;
 
 import gui.ava.html.image.generator.HtmlImageGenerator;
 
+import payint.PayIntConnector;
 public class MainClass {
 	
 	public static void main(String[] args) throws URISyntaxException, IOException {
@@ -39,9 +40,21 @@ public class MainClass {
         hig.saveAsImage(new File("C:\\Users\\truong.lam\\Desktop\\testa.png"));
         */
         
-        Document doc = Jsoup.parse("<?xml version=\"1.0\"?><!DOCTYPE root [<!ENTITY test SYSTEM 'file:///etc/passwd'>]><root>&test;</root>");
+        //Document doc = Jsoup.parse("<?xml version=\"1.0\"?><!DOCTYPE root [<!ENTITY test SYSTEM 'file:///etc/passwd'>]><root>&test;</root>");
 //		doc.outputSettings().prettyPrint(false);
-		System.out.println(doc);
+		// System.out.println(doc);
+		
+		
+		/*
+		 * String aa = "sql ||| xxxxxxxxxxxxxxxxxx"; if (aa.contains("|| |") ){
+		 * System.out.println(aa.split(" \\|\\|\\| ")[0]); }
+		 * 
+		 * System.out.println(aa.replaceAll("^(.* \\|\\|\\|) ", ""));
+		 */
+		
+		PayIntConnector payint = new PayIntConnector();
+		String file = payint.genPayIntPayload("D:/Techlab/Tools/payint-master/");
+		System.out.println(file);
 		
 	  }
 }
