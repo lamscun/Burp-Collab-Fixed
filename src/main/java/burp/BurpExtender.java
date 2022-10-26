@@ -56,6 +56,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -108,8 +109,8 @@ import logcolor.TableLogColor;
 
 /* loaded from: collab_fixed_v5.jar:burp/BurpExtender.class */
 public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListener, IContextMenuFactory, IHttpListener, AWTEventListener   {
-	private String extensionName = "Collab_Fixed_v5.6";
-	private String extensionVersion = "5.6";
+	private String extensionName = "Collab_Fixed_v5.9";
+	private String extensionVersion = "5.7";
 	private IBurpExtenderCallbacks callbacks;
 	private IExtensionHelpers helpers;
 	private PrintWriter stderr;
@@ -145,6 +146,8 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 	private String config_biid = "";
 	private String config_cname = "";
 	private String config_collab_id = "";
+	String subDomain = "";
+	private String choosed = "";
 
 	public static JTextField filepath = new JTextField();
 	public static JTabbedPane mainTab = new JTabbedPane();
@@ -154,6 +157,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 	public static JTextField biidText = new JTextField();
 	public static JTextField collabIdText = new JTextField();
 	public static JTextField logspath = null;
+	public static JTextField customText = null;
 
 	public static String collab_fixed_config_file_name = "collab_fixed_config.json";
 	public static String collab_fixed_logs_file_name = "collab_fixed_logs.json";
@@ -279,6 +283,9 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				filter.addItem("DNS");
 				filter.addItem("HTTP");
 				filter.addItem("SMTP");
+				
+				
+				
 				filter.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
@@ -312,6 +319,31 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				 * Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new
 				 * StringSelection(payload), null); } });
 				 */
+				
+				customText = new JTextField();
+				customText.setPreferredSize(new Dimension(100, 25));
+				JComboBox sub_type = new JComboBox();
+				sub_type.addItem("Datetime");
+				sub_type.addItem("Timestamp");
+				
+				
+				sub_type.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						choosed = sub_type.getSelectedItem().toString();
+						if (choosed=="Datetime") {
+							Timestamp timestamp = new Timestamp(System.currentTimeMillis()+3600000*7);
+							customText.setText("d" + timestamp.toString().split("\\.")[0].replace("-", "").replace(":", "").replace(" ", "t") );
+						}
+						if (choosed=="Timestamp") {
+							customText.setText(java.lang.System.currentTimeMillis() / 1000 +"");
+						}
+		
+
+
+						
+					}
+				});
 
 				JButton pollButton = new JButton("Poll");
 
@@ -346,9 +378,14 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				btn_domain_id.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
+						subDomain = customText.getText();
+						if (subDomain.length() >0) {
+							subDomain=subDomain+".";
+						} 
+						
 						Toolkit.getDefaultToolkit().getSystemClipboard()
 								.setContents(new StringSelection(
-										java.lang.System.currentTimeMillis() / 1000 + "." + btn_domain_id.getText()),
+										subDomain + btn_domain_id.getText()),
 										(ClipboardOwner) null);
 					}
 				});
@@ -430,9 +467,11 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 
 				topPanel.add(l_collabIdText, createConstraints(1, 1, 1, GridBagConstraints.NONE));
 				topPanel.add(collabIdText, createConstraints(2, 1, 1, GridBagConstraints.NONE));
-				topPanel.add(btn_domain_id, createConstraints(3, 1, 1, GridBagConstraints.NONE));
-				topPanel.add(pollButton, createConstraints(4, 1, 1, GridBagConstraints.NONE));
-
+				topPanel.add(sub_type, createConstraints(3, 1, 1, GridBagConstraints.NONE));
+				topPanel.add(customText, createConstraints(4, 1, 1, GridBagConstraints.NONE));
+				topPanel.add(btn_domain_id, createConstraints(5, 1, 1, GridBagConstraints.NONE));
+				topPanel.add(pollButton, createConstraints(6, 1, 1, GridBagConstraints.NONE));
+				
 				topPanel.add(l_biidText, createConstraints(1, 2, 1, GridBagConstraints.NONE));
 				topPanel.add(biidText, createConstraints(2, 2, 1, GridBagConstraints.NONE));
 				topPanel.add(l_cname, createConstraints(3, 2, 1, GridBagConstraints.NONE));

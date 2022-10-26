@@ -42,10 +42,10 @@ public class ExtensionState {
     public String payloadsPayIntPath = "";
     public String payIntPath = "";
     
-    public String payint_XSS_HUNTER;
-    public String payint_SLEEP_TIME;
-    public String payint_PROJECT_NAME;
-    public String payint_BURP_COLLAB_DOMAIN;
+    public String payint_XSS_HUNTER = "lamscun.xss.ht";
+    public String payint_SLEEP_TIME = "10";
+    public String payint_PROJECT_NAME = "collabfix";
+    public String payint_BURP_COLLAB_DOMAIN = "wwwz15e554m201wwajfl7m1ey54z1nq.oastify.com";
     /**
      * Generate the singleton
      */
@@ -62,6 +62,11 @@ public class ExtensionState {
     	autoCompleterTab.textFileName.setText(payloadsPath);
     	autoCompleterTab.payint_payloads_path_Label.setText(payloadsPayIntPath);
     	autoCompleterTab.payint_pathField.setText(payIntPath);
+    	
+    	autoCompleterTab.text_BURP_COLLAB_DOMAIN.setText(payint_BURP_COLLAB_DOMAIN);
+    	autoCompleterTab.text_PROJECT_NAME.setText(payint_PROJECT_NAME);
+    	autoCompleterTab.text_SLEEP_TIME.setText(payint_SLEEP_TIME);
+    	autoCompleterTab.text_XSS_HUNTER.setText(payint_XSS_HUNTER);
     	
     	
         keywords.clear();

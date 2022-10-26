@@ -11,6 +11,11 @@ import java.io.Writer;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,9 +57,17 @@ public class MainClass {
 		 * System.out.println(aa.replaceAll("^(.* \\|\\|\\|) ", ""));
 		 */
 		
-		PayIntConnector payint = new PayIntConnector();
-		String file = payint.genPayIntPayload("D:/Techlab/Tools/payint-master/");
-		System.out.println(file);
+//		PayIntConnector payint = new PayIntConnector();
+//		String file = payint.genPayIntPayload("D:/Techlab/Tools/payint-master/");
+//		System.out.println(file);
 		
+//		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd HHmmss");  
+//		LocalDateTime now = LocalDateTime.now();  
+//		ZonedDateTime zonedUTC = now.atZone(ZoneId.of("+07"));
+//		System.out.println("d"+dtf.format(zonedUTC).toString().replace(" ", "t"));
+		System.out.println(System.currentTimeMillis());
+		Timestamp timestamp = new Timestamp(System.currentTimeMillis()-3600000*7);
+		
+		System.out.println(timestamp.toString().split("\\.")[0]);
 	  }
 }

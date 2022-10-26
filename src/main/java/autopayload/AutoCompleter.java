@@ -8,6 +8,8 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import java.awt.*;
+import java.awt.datatransfer.ClipboardOwner;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
@@ -77,7 +79,7 @@ public class AutoCompleter implements DocumentListener, CaretListener{
         this.pos = this.source.getCaret().getDot();
         this.source.addCaretListener(this);
         
-        suggestionPane = new JFrame();
+        suggestionPane = new JFrame("Auto Payload");
         
         
         suggestionPane.setSize(iframe_width,iframe_height);
@@ -89,17 +91,30 @@ public class AutoCompleter implements DocumentListener, CaretListener{
         suggestionPane.setLocationRelativeTo(null);
         suggestionPane.setLocation(700,700);
         
+        JButton btn_close=new JButton("Close"); 
+        btn_close.setCursor(new Cursor(Cursor.HAND_CURSOR));  
+        btn_close.addActionListener(event->{
+        	suggestionPane.dispose();
+        });
+        btn_close.setBounds(1100,0,100,30);  
         
+        JButton btn_copyAll=new JButton("Copy all"); 
+        btn_copyAll.setCursor(new Cursor(Cursor.HAND_CURSOR));  
+       
+        btn_copyAll.setBounds(1000,0,100,30);  
         
+//        suggestionPane.add(button);
+        suggestionPane.getContentPane().add(btn_close);
+        suggestionPane.getContentPane().add(btn_copyAll);
+//        pane.add(button);
         JList<String> suggestions = new JList<>(suggestionsModel);
         JScrollPane scroller = new JScrollPane(suggestions);
+        pane.add(btn_close, BorderLayout.CENTER);
         pane.add(scroller, BorderLayout.CENTER);
+//        pane.setBounds(0, 30, iframe_width, iframe_height);
         suggestionPane.getContentPane().add(pane);
         //Double clicks will pick the autocompletion to commit to
         suggestions.addMouseListener(new MouseAdapter() {
-        	
-        	
-        	
             @Override
             public void mouseClicked(MouseEvent e) {
                 JList list = (JList)e.getSource();
@@ -124,7 +139,17 @@ public class AutoCompleter implements DocumentListener, CaretListener{
                 }
             }
         });
-
+        
+        btn_copyAll.addActionListener(event->{
+        	String all_current_payloads = "";
+        	for(int i = 0; i< suggestionsModel.getSize();i++){
+        		String selectedCompletion = suggestionsModel.elementAt(i).replaceAll("^(.* \\|\\|\\|) ", "");
+        		all_current_payloads = all_current_payloads + selectedCompletion + "\n";
+            }
+        	
+        	Toolkit.getDefaultToolkit().getSystemClipboard()
+			.setContents(new StringSelection(all_current_payloads), (ClipboardOwner) null);
+        });
     }
 
     
