@@ -69,6 +69,8 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -339,16 +341,38 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 							customText.setText(java.lang.System.currentTimeMillis() / 1000 +"");
 						}
 		
-
-
-						
 					}
 				});
 
 				JButton pollButton = new JButton("Poll");
 
 				JButton randomButton = new JButton("Random ID");
+				
+				JButton filterButton = new JButton("Filter");
+				JTextField filterText = new JTextField();
+				
+				filterText.setPreferredSize(new Dimension(350, 25));
+				filterText.setMinimumSize(new Dimension(200, 25));
+				
+				filterText.addKeyListener(new KeyAdapter() {
+				        @Override
+				        public void keyPressed(KeyEvent e) {
+				            if(e.getKeyCode() == KeyEvent.VK_ENTER){
+				            	String text = filterText.getText();
+					               if(text.length() == 0) {
+					                  sorter.setRowFilter(null);
+					               } else {
+					                  try {
+					                     sorter.setRowFilter(RowFilter.regexFilter(text));
+					                  } catch(PatternSyntaxException pse) {
+					                        System.out.println("Bad regex pattern");
+					                  }
+					                }
+				            }
+				        }
 
+				    });
+				
 				JTextField numberOfPayloads = new JTextField("1");
 				numberOfPayloads.setMinimumSize(new Dimension(25, 25));
 
@@ -458,6 +482,21 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 						}
 					}
 				});
+				
+				filterButton.addActionListener(new ActionListener() {
+		            public void actionPerformed(ActionEvent e) {
+		               String text = filterText.getText();
+		               if(text.length() == 0) {
+		                  sorter.setRowFilter(null);
+		               } else {
+		                  try {
+		                     sorter.setRowFilter(RowFilter.regexFilter(text));
+		                  } catch(PatternSyntaxException pse) {
+		                        System.out.println("Bad regex pattern");
+		                  }
+		                }
+		            }
+		         });
 
 				pollButton.setPreferredSize(new Dimension(80, 30));
 				pollButton.setMaximumSize(new Dimension(80, 30));
@@ -482,6 +521,9 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				topPanel.add(filter, createConstraints(3, 3, 1, GridBagConstraints.NONE));
 				topPanel.add(exportBtn, createConstraints(4, 3, 1, GridBagConstraints.NONE));
 				topPanel.add(randomButton, createConstraints(5, 3, 1, GridBagConstraints.NONE));
+				
+				topPanel.add(filterButton, createConstraints(1, 4, 1, GridBagConstraints.NONE));
+				topPanel.add(filterText, createConstraints(2, 4, 1, GridBagConstraints.NONE));
 
 				randomButton.addActionListener(new ActionListener() {
 					@Override
@@ -1623,11 +1665,13 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				// stdout.println("JS Beautify 1");
 				
 				stdout.println("Adding AutoPayload Listener");
-				AutoCompleter t = new AutoCompleter(source);
-				source.getDocument().addDocumentListener(t);
-				source.putClientProperty("hasListener", true);
-				ExtensionState.getInstance().addListener(t);
 				
+				/*  Disable auto suggestion
+					AutoCompleter t = new AutoCompleter(source);
+					source.getDocument().addDocumentListener(t);
+					source.putClientProperty("hasListener", true);
+					ExtensionState.getInstance().addListener(t);
+				*/
 				source.addKeyListener(new KeyAdapter() {
 					@Override
 					public void keyPressed(KeyEvent e) {
@@ -1652,36 +1696,39 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 										source.getSelectionEnd());
 								
 							}
-							// Check : Ctrl + Shift + N --> Show
-							if (keyCode == 78) {
-								if(chk1==0) {
-									t.suggestionPane.setVisible(true);
-									t.suggestionPane.toFront();
-									chk1=1;
-								} else {
-									t.suggestionPane.setVisible(false);
-									chk1=0;
+							
+							/*  Disable auto suggestion
+								// Check : Ctrl + Shift + N --> Show
+								if (keyCode == 78) {
+									if(chk1==0) {
+										t.suggestionPane.setVisible(true);
+										t.suggestionPane.toFront();
+										chk1=1;
+									} else {
+										t.suggestionPane.setVisible(false);
+										chk1=0;
+									}
 								}
-							}
-							// Check : Ctrl + Shift + M  -> Show all
-							if (keyCode == 78) {
-								if(chk==0 ) {
-									t.suggestionPane.setVisible(true);
-									t.suggestionPane.toFront();
-									t.suggestionsModel.addAll(ExtensionState.getInstance().keywords);
-									
-									Point p = MouseInfo.getPointerInfo().getLocation();	
-					            	Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-					            	t.suggestionPane.setSize(350, (screenSize.height*2)/3);
-									t.suggestionPane.setLocation(p.x, screenSize.height/3);
-									t.chk_pos = 1;
-									chk=1;
-								} else {
-									t.suggestionPane.setVisible(false);
-									t.chk_pos = 0;
-									chk=0;
+								// Check : Ctrl + Shift + M  -> Show all
+								if (keyCode == 78) {
+									if(chk==0 ) {
+										t.suggestionPane.setVisible(true);
+										t.suggestionPane.toFront();
+										t.suggestionsModel.addAll(ExtensionState.getInstance().keywords);
+										
+										Point p = MouseInfo.getPointerInfo().getLocation();	
+						            	Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+						            	t.suggestionPane.setSize(350, (screenSize.height*2)/3);
+										t.suggestionPane.setLocation(p.x, screenSize.height/3);
+										t.chk_pos = 1;
+										chk=1;
+									} else {
+										t.suggestionPane.setVisible(false);
+										t.chk_pos = 0;
+										chk=0;
+									}
 								}
-							}
+							*/
 						}
 
 						/*

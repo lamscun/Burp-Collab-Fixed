@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
@@ -80,7 +81,6 @@ public class AutoCompleter implements DocumentListener, CaretListener{
         this.source.addCaretListener(this);
         
         suggestionPane = new JFrame("Auto Payload");
-        
         
         suggestionPane.setSize(iframe_width,iframe_height);
 //        suggestionPane.setTitle("List Suggestion");

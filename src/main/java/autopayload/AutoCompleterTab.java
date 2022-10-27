@@ -8,11 +8,14 @@ import javax.swing.table.TableRowSorter;
 import payint.PayIntConnector;
 
 import java.awt.*;
+import java.awt.datatransfer.ClipboardOwner;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.regex.PatternSyntaxException;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
@@ -36,6 +39,8 @@ public class AutoCompleterTab extends JPanel {
     public JTextField text_SLEEP_TIME;
     public JTextField text_PROJECT_NAME;
     public JTextField text_BURP_COLLAB_DOMAIN;
+    
+    public JTextField text_Filter;
     DefaultTableModel model;
     AutoCompleterTab() {
         this.initTab();
@@ -87,6 +92,8 @@ public class AutoCompleterTab extends JPanel {
 				return super.getColumnClass(columnIndex);
 			}
 		};
+		
+		
         JTable collaboratorTable = new JTable(model);
         TableRowSorter<TableModel> sorter = new TableRowSorter<>(model);
 		collaboratorTable.setRowSorter(sorter);
@@ -370,6 +377,63 @@ public class AutoCompleterTab extends JPanel {
         mainPane.add(btnLoadPayIntConfig, gbcbtnLoadPayIntConfig);
         
         add(mainPane,BorderLayout.CENTER);
+        
+        
+        text_Filter = new JTextField();
+        GridBagConstraints gbc_Text_Filter = new GridBagConstraints();
+        gbc_Text_Filter.insets = new Insets(5, 5, 5, 5);
+        gbc_Text_Filter.fill = GridBagConstraints.HORIZONTAL;
+        gbc_Text_Filter.gridx = 0;
+        gbc_Text_Filter.gridy = 13;
+        mainPane.add(text_Filter, gbc_Text_Filter);
+        
+        JButton btn_Filter = new JButton("Filter");
+        GridBagConstraints gbcFilter = new GridBagConstraints();
+        gbcFilter.insets = new Insets(5, 5, 5, 5);
+        gbcFilter.fill = GridBagConstraints.HORIZONTAL;
+        gbcFilter.gridx = 1;
+        gbcFilter.gridy = 13;
+        mainPane.add(btn_Filter, gbcFilter);
+        
+        
+        JButton btn_copyAll = new JButton("Copy Selected"); 
+        GridBagConstraints gbc_copyAll = new GridBagConstraints();
+        gbc_copyAll.insets = new Insets(5, 5, 5, 5);
+        gbc_copyAll.fill = GridBagConstraints.HORIZONTAL;
+        gbc_copyAll.gridx = 0;
+        gbc_copyAll.gridy = 14;
+        mainPane.add(btn_copyAll, gbc_copyAll);
+        
+        
+        btn_copyAll.addActionListener(event->{     	
+        	int[] row_ids = collaboratorTable.getSelectedRows();    	
+        	String all_current_payloads = "";	
+        	for (int rowId : row_ids) {
+				int modelRow = collaboratorTable.convertRowIndexToModel(rowId);
+				String str_payload = (String) collaboratorTable.getModel().getValueAt(modelRow, 2);
+				all_current_payloads = all_current_payloads + str_payload + "\n";
+			}
+
+        	Toolkit.getDefaultToolkit().getSystemClipboard()
+			.setContents(new StringSelection(all_current_payloads), (ClipboardOwner) null);
+        });
+        
+        
+        btn_Filter.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               String text = text_Filter.getText();
+               if(text.length() == 0) {
+                  sorter.setRowFilter(null);
+               } else {
+                  try {
+                     sorter.setRowFilter(RowFilter.regexFilter(text));
+                  } catch(PatternSyntaxException pse) {
+                        System.out.println("Bad regex pattern");
+                  }
+                }
+            }
+         });
+        
         
         
         deleteSelectedMenu.addActionListener(new ActionListener() {
