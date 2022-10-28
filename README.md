@@ -7,12 +7,15 @@ Edit code from https://github.com/PortSwigger/taborator.git
 
 # Installation and usage
 
-- Import jar file
-- Click random ID
+- Import jar file from lastest release
+- Click random ID/add newId
 - Click Load Config
 - Done!!
 
-Install from the BApp store.
+For AutoPayload tab
+- import your payload list
+- 
+
 
 
 # Screenshots
