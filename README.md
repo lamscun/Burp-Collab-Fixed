@@ -14,9 +14,12 @@ Edit code from https://github.com/PortSwigger/taborator.git
 
 Install from the BApp store.
 
+
 # Screenshots
 
-![Client Screenshot](https://github.com/123Pro123Pro/Burp-Collab-Fixed/blob/main/images/UI.png)
+![demo1](https://user-images.githubusercontent.com/25797914/198510580-368051f1-3bbb-48d1-843f-9e8ad8cd3bee.png)
+
+![demo2](https://user-images.githubusercontent.com/25797914/198510868-8275aade-5500-491c-b299-565a2cfadce9.png)
 
 ![Tab Screenshot](https://github.com/123Pro123Pro/Burp-Collab-Fixed/blob/main/images/screenshot-tab.png)
 
