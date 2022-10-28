@@ -111,8 +111,8 @@ import logcolor.TableLogColor;
 
 /* loaded from: collab_fixed_v5.jar:burp/BurpExtender.class */
 public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListener, IContextMenuFactory, IHttpListener, AWTEventListener   {
-	private String extensionName = "Collab_Fixed_v5.9";
-	private String extensionVersion = "5.7";
+	private String extensionName = "Collab_Fixed_v6.3";
+	private String extensionVersion = "6.3";
 	private IBurpExtenderCallbacks callbacks;
 	private IExtensionHelpers helpers;
 	private PrintWriter stderr;
@@ -145,9 +145,9 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 	private TableRowSorter<TableModel> sorter = null;
 	private Color defaultTabColour;
 
-	private String config_biid = "";
-	private String config_cname = "";
-	private String config_collab_id = "";
+	private String config_biids = "";
+	private String config_cnames = "";
+	private String config_collab_ids = "";
 	String subDomain = "";
 	private String choosed = "";
 
@@ -155,6 +155,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 	public static JTabbedPane mainTab = new JTabbedPane();
 	public static JTextPane l_cname = new JTextPane();
 	public static JButton btn_domain_id = new JButton();
+	public static JComboBox multipleBiid = new JComboBox();
 
 	public static JTextField biidText = new JTextField();
 	public static JTextField collabIdText = new JTextField();
@@ -288,23 +289,25 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				
 				
 				
-				filter.addActionListener(new ActionListener() {
+				multipleBiid.setPreferredSize(new Dimension(200,25));
+				
+				multipleBiid.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						if (sorter == null) {
-							return;
+						stdout.println("Debug 1");
+						if (multipleBiid.getSelectedItem().toString().contains(" - ")) {
+							stdout.println("Debug 2");
+							String selectedBiid = multipleBiid.getSelectedItem().toString().split(" - ")[1];
+							String selectedCollabId = multipleBiid.getSelectedItem().toString().split(" - ")[0];
+							btn_domain_id.setText(selectedCollabId + ".oastify.com");
+							stdout.println(selectedBiid);
+							stdout.println(selectedCollabId);
+							BurpExtender.biidText.setText(selectedBiid);
+							BurpExtender.collabIdText.setText(selectedCollabId);
+							
 						}
-						selectedRow = -1;
-						if (filter.getSelectedIndex() == 0) {
-							sorter.setRowFilter(null);
-						} else {
-							sorter.setRowFilter(new RowFilter<TableModel, Integer>() {
-								@Override
-								public boolean include(RowFilter.Entry<? extends TableModel, ? extends Integer> row) {
-									return row.getValue(2).equals(filter.getSelectedItem().toString());
-								}
-							});
-						}
+						
+						
 					}
 				});
 
@@ -348,6 +351,10 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 
 				JButton randomButton = new JButton("Random ID");
 				
+				JButton addNewBiidButton = new JButton("Add NewID");
+				
+				JButton removeCurrentBiid = new JButton("Remove Biid");
+				
 				JButton filterButton = new JButton("Filter");
 				JTextField filterText = new JTextField();
 				
@@ -355,23 +362,23 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				filterText.setMinimumSize(new Dimension(200, 25));
 				
 				filterText.addKeyListener(new KeyAdapter() {
-				        @Override
-				        public void keyPressed(KeyEvent e) {
-				            if(e.getKeyCode() == KeyEvent.VK_ENTER){
-				            	String text = filterText.getText();
-					               if(text.length() == 0) {
-					                  sorter.setRowFilter(null);
-					               } else {
-					                  try {
-					                     sorter.setRowFilter(RowFilter.regexFilter(text));
-					                  } catch(PatternSyntaxException pse) {
-					                        System.out.println("Bad regex pattern");
-					                  }
-					                }
-				            }
-				        }
+			        @Override
+			        public void keyPressed(KeyEvent e) {
+			            if(e.getKeyCode() == KeyEvent.VK_ENTER){
+			            	String text = filterText.getText();
+				               if(text.length() == 0) {
+				                  sorter.setRowFilter(null);
+				               } else {
+				                  try {
+				                     sorter.setRowFilter(RowFilter.regexFilter(text));
+				                  } catch(PatternSyntaxException pse) {
+				                        System.out.println("Bad regex pattern");
+				                  }
+				                }
+			            }
+			        }
 
-				    });
+			    });
 				
 				JTextField numberOfPayloads = new JTextField("1");
 				numberOfPayloads.setMinimumSize(new Dimension(25, 25));
@@ -521,10 +528,78 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				topPanel.add(filter, createConstraints(3, 3, 1, GridBagConstraints.NONE));
 				topPanel.add(exportBtn, createConstraints(4, 3, 1, GridBagConstraints.NONE));
 				topPanel.add(randomButton, createConstraints(5, 3, 1, GridBagConstraints.NONE));
+				topPanel.add(addNewBiidButton, createConstraints(6, 3, 1, GridBagConstraints.NONE));
 				
 				topPanel.add(filterButton, createConstraints(1, 4, 1, GridBagConstraints.NONE));
 				topPanel.add(filterText, createConstraints(2, 4, 1, GridBagConstraints.NONE));
+				
+				topPanel.add(multipleBiid, createConstraints(5, 4, 1, GridBagConstraints.NONE));
+				topPanel.add(removeCurrentBiid, createConstraints(6, 4, 1, GridBagConstraints.NONE));
 
+				addNewBiidButton.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						int answer = JOptionPane.showConfirmDialog((Component) null,
+								"This will add new biid, are you sure?");
+						if (answer == 0) {
+
+							// Get from custom proxy
+							String ran_collab = collaborator.generatePayload(false);
+							String ran_biid = CustomProxy.getCollabBiid(callbacks, collaborator);
+							stdout.println("Random collab - biid: " + ran_collab + " - " + ran_biid);
+							
+							multipleBiid.addItem(ran_collab + " - " + ran_biid);
+							
+							// BurpExtender.biidText.setText(ran_biid);
+							// BurpExtender.collabIdText.setText(ran_collab);
+							// Get from custom proxy
+
+							/*
+							 * Random r = new Random(); String[] list_random_biids =
+							 * {"g8zhf3fhiA04IZyUksUl8IM5yQDtUGZMFhWQ0Zwba7k%3d -- l2oayratq3wrna9hjnqvoge3quwkk9.oastify.com"
+							 * ,
+							 * "op2T%2fiCV3GNCepi%2fQWT5eeCY1u1KVc6fXelNiQxEfUM%3d -- 020k3pifltekneo7d74oof30ur0ho6.oastify.com"
+							 * }; String random_biid =
+							 * list_random_biids[r.nextInt(list_random_biids.length)];
+							 * BurpExtender.biidText.setText(random_biid.split(" -- ")[0]);
+							 * BurpExtender.collabIdText.setText(random_biid.split(" -- ")[1].replace(
+							 * ".oastify.com", ""));
+							 */
+						}
+					}
+				});
+				
+				removeCurrentBiid.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						int answer = JOptionPane.showConfirmDialog((Component) null,
+								"This will remove current biid, are you sure?");
+						if (answer == 0) {
+
+							// Get from custom proxy
+							
+							String currrentBiidCollab = multipleBiid.getSelectedItem().toString();
+							multipleBiid.removeItem(multipleBiid.getSelectedItem());
+							multipleBiid.getSelectedItem();
+							
+							biidText.setText("");
+							collabIdText.setText("");
+							btn_domain_id.setText(".oastify.com");
+							try {
+								saveConfigToFile();
+								loadConfigFromFile2();
+							} catch (IOException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
+							
+						
+							
+							
+						}
+					}
+				});
+				
 				randomButton.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
@@ -1024,15 +1099,45 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 
 			private void saveConfigToFile() throws IOException {
 				stdout.println("SaveConfigToFile... ");
-				String biid_ = biidText.getText();
-				String collab_id_ = collabIdText.getText();
-
-				stdout.println("biid_: " + biid_);
-				stdout.println("collab_id_: " + collab_id_);
-
+				//String biid_ = biidText.getText();
+				//String collab_id_ = collabIdText.getText();
+//				stdout.println("biid_: " + biid_);
+//				stdout.println("collab_id_: " + collab_id_);
+//				Map<String, Object> map = new HashMap<>();
+//				map.put("biid", biid_);
+//				map.put("collab_id", collab_id_);
+//				map.put("cname", "");
+//				try (Writer writer = new FileWriter(collab_fixed_config_file_name)) {
+//					Gson gson = new GsonBuilder().create();
+//
+//					gson.toJson(map, writer);
+//
+//				} catch (IOException e2) {
+//					// TODO Auto-generated catch block
+//					e2.printStackTrace();
+//				}
+				
+				// new
+				String biids = "";
+				String collab_ids = "";
+			
+				int numberItem = multipleBiid.getItemCount();
+				for (int i=0; i< numberItem; i=i+1) {
+					biids+=multipleBiid.getItemAt(i).toString().split(" - ")[1] + ", ";
+					collab_ids+=multipleBiid.getItemAt(i).toString().split(" - ")[0] + ", ";
+				}
+				
+				if (biids.contains(biidText.getText())==false  && collab_ids.contains(collabIdText.getText())==false) {
+					biids+=biidText.getText();
+					collab_ids+=collabIdText.getText();
+				}
+				
+				stdout.println("biids: " + biids);
+				stdout.println("collab_ids: " + collab_ids);
+				
 				Map<String, Object> map = new HashMap<>();
-				map.put("biid", biid_);
-				map.put("collab_id", collab_id_);
+				map.put("biid", biids);
+				map.put("collab_id", collab_ids);
 				map.put("cname", "");
 				try (Writer writer = new FileWriter(collab_fixed_config_file_name)) {
 					Gson gson = new GsonBuilder().create();
@@ -1043,10 +1148,14 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 					// TODO Auto-generated catch block
 					e2.printStackTrace();
 				}
+				
+				// new
+				
 
 			}
 
 			private void loadConfigFromFile2() throws IOException {
+				/*
 				stdout.println("LoadConfigFromFile2... ");
 				Gson gson = new Gson();
 				// create a reader
@@ -1060,13 +1169,6 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				config_cname = (String) map.get("cname");
 				config_collab_id = (String) map.get("collab_id");
 
-				/*
-				 * StyledDocument doc = l_domain_id.getStyledDocument();
-				 * 
-				 * Style style = l_domain_id.addStyle("Red", null);
-				 * StyleConstants.setForeground(style, Color.red);
-				 */
-
 				btn_domain_id.setText(config_collab_id + ".oastify.com");
 
 				l_cname.setText("CNAME: " + config_cname);
@@ -1076,6 +1178,63 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 					biidText.setText(config_biid);
 					collabIdText.setText(config_collab_id);
 				}
+				*/
+				
+				// new 
+				stdout.println("LoadConfigFromFile2... ");
+				Gson gson = new Gson();
+				// create a reader
+				Reader reader = Files.newBufferedReader(Paths.get(collab_fixed_config_file_name));
+				// convert JSON file to map
+				Map<?, ?> map = gson.fromJson(reader, Map.class);
+				System.out.println();
+				// print map entries
+				
+				
+				config_biids = (String) map.get("biid");
+				config_cnames = (String) map.get("cname");
+				config_collab_ids = (String) map.get("collab_id");
+				stdout.println(config_biids);
+				stdout.println(config_collab_ids);
+				//multipleBiid.removeAllItems();
+				
+				
+				String strItems = "";
+				int numberItem = multipleBiid.getItemCount();
+				for (int i=numberItem-1 ; i>=0; i--) {
+					strItems+=multipleBiid.getItemAt(i).toString()+",";
+				}
+				
+				
+				if (config_biids != "" && config_collab_ids!="" && config_biids.length()>0  && config_collab_ids.length()>0 ) {
+					stdout.println("Debug 3");
+					
+					int numberBiids = config_biids.split(", ").length;
+					for (int i = numberBiids-1; i >=0; i--) {
+						stdout.println("Debug 4");
+						if (!strItems.contains(config_collab_ids.split(", ")[i])) {
+							multipleBiid.addItem(config_collab_ids.split(", ")[i] + " - "+ config_biids.split(", ")[i]);
+						}
+						
+						
+					}
+					
+					String firstBiid = config_biids.split(", ")[0];
+					String firstCallabId = config_collab_ids.split(", ")[0];
+					
+					
+					btn_domain_id.setText(firstCallabId + ".oastify.com");
+	
+					l_cname.setText("CNAME: " + config_cnames);
+					
+	
+					if (firstBiid != "" && firstCallabId != "") {
+						biidText.setText(firstBiid);
+						collabIdText.setText(firstCallabId);
+					}
+				}
+				reader.close();
+				
 
 			}
 
@@ -1133,20 +1292,25 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 			private void pollNowWithFixedCollab() {
 				try {
 					stdout.println("PollNowWithFixedCollab...");
-					stdout.println("_biid_:" + config_biid);
-					if (config_biid != "") {
+					stdout.println("_biid_:" + config_biids);
+					if (config_biids != "") {
+						
+						int numberBiids = config_biids.split(", ").length;
+						for (int i=0; i<numberBiids; i++) {
+							JsonObject body = Maintest.getNewRecord(config_biids.split(", ")[i]);
+							if (body.has("responses")) {
 
-						JsonObject body = Maintest.getNewRecord(config_biid);
-						if (body.has("responses")) {
-
-							stdout.println("Response: " + body.get("responses"));
-							JsonArray jArray = (JsonArray) body.get("responses");
-							if (jArray.size() > 0) {
-								insertInteractions(jArray);
-								saveLogs();
-								// TimeUnit.SECONDS.sleep(1);
+								stdout.println("Response: " + body.get("responses"));
+								JsonArray jArray = (JsonArray) body.get("responses");
+								if (jArray.size() > 0) {
+									insertInteractions(jArray);
+									saveLogs();
+									// TimeUnit.SECONDS.sleep(1);
+								}
 							}
 						}
+						
+						
 					} else {
 						stdout.println("Else 1");
 					}
@@ -1286,7 +1450,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 
 //		        stdout.println("key: "+ keyStr + " value: " + keyvalue);
 
-				if (keyStr.contains("client")) {
+				if (keyStr.contains("client") && keyStr.length()==6) {
 					interactionHistoryItem.put("client_ip", keyvalue.toString().replace("\"", ""));
 				}
 				if (keyStr.contains("interactionString")) {

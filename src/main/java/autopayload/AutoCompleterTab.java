@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.regex.PatternSyntaxException;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.ActionEvent;
 
 public class AutoCompleterTab extends JPanel {
@@ -386,6 +388,25 @@ public class AutoCompleterTab extends JPanel {
         gbc_Text_Filter.gridx = 0;
         gbc_Text_Filter.gridy = 13;
         mainPane.add(text_Filter, gbc_Text_Filter);
+        
+        text_Filter.addKeyListener(new KeyAdapter() {
+	        @Override
+	        public void keyPressed(KeyEvent e) {
+	            if(e.getKeyCode() == KeyEvent.VK_ENTER){
+	            	String text = text_Filter.getText();
+	                if(text.length() == 0) {
+	                   sorter.setRowFilter(null);
+	                } else {
+	                   try {
+	                      sorter.setRowFilter(RowFilter.regexFilter(text));
+	                   } catch(PatternSyntaxException pse) {
+	                         System.out.println("Bad regex pattern");
+	                   }
+	                 }
+	            }
+	        }
+
+	    });
         
         JButton btn_Filter = new JButton("Filter");
         GridBagConstraints gbcFilter = new GridBagConstraints();

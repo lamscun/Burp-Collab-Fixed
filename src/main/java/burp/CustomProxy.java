@@ -20,7 +20,7 @@ public class CustomProxy {
                         "                        \"destination_host\":\"polling.oastify.com\",\n" +
                         "                        \"enabled\":true,\n" +
                         "                        \"proxy_host\":\"127.0.0.1\",\n" +
-                        "                        \"proxy_port\":8476\n" +
+                        "                        \"proxy_port\":12345\n" +
                         "                    },"));
 
         burp_config.getJSONObject("project_options")
@@ -45,7 +45,7 @@ public class CustomProxy {
             PrintWriter stdout = new PrintWriter(callbacks.getStdout(), true);
             try {
                 final byte[]  Request = new byte[1024];
-                ServerSocket serverSocket = new ServerSocket(8476);
+                ServerSocket serverSocket = new ServerSocket(12345);
                 Socket socket = serverSocket.accept();
 
                 InputStream InputStreamClient = socket.getInputStream();
@@ -53,7 +53,7 @@ public class CustomProxy {
                 long starttime = System.currentTimeMillis();
 
                 while (true){
-                    if (System.currentTimeMillis() - starttime > 5000)
+                    if (System.currentTimeMillis() - starttime > 10000)
                         break;
                     int num_byte = InputStreamClient.read(Request);
                     if (num_byte != -1)
