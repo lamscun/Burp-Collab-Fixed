@@ -109,10 +109,23 @@ import autopayload.AutoCompleter;
 import autopayload.ExtensionState;
 import logcolor.TableLogColor;
 
+
+import burp.api.montoya.*;
+import burp.api.montoya.collaborator.*;
+import burp.api.montoya.logging.Logging;
+
+import burp.api.montoya.BurpExtension;
+import burp.api.montoya.MontoyaApi;
+import burp.api.montoya.logging.Logging;
+import burp.api.montoya.BurpExtension;
+import burp.api.montoya.MontoyaApi;
+import burp.api.montoya.collaborator.*;
+import burp.api.montoya.logging.Logging;
+
 /* loaded from: collab_fixed_v5.jar:burp/BurpExtender.class */
-public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListener, IContextMenuFactory, IHttpListener, AWTEventListener   {
-	private String extensionName = "Collab_Fixed_v6.3";
-	private String extensionVersion = "6.3";
+public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtensionStateListener, IContextMenuFactory, IHttpListener, AWTEventListener   {
+	private String extensionName = "Collab_Fixed_v6.5";
+	private String extensionVersion = "6.5";
 	private IBurpExtenderCallbacks callbacks;
 	private IExtensionHelpers helpers;
 	private PrintWriter stderr;
@@ -122,6 +135,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 	private int unread = 0;
 	private ArrayList<Integer> readRows = new ArrayList<>();
 	private IBurpCollaboratorClientContext collaborator = null;
+	private Collaborator collaboratorNew = null;
 	private HashMap<Integer, HashMap<String, String>> interactionHistory = new HashMap<>();
 	private HashMap<String, HashMap<String, String>> originalRequests = new HashMap<>();
 	private HashMap<String, String> originalResponses = new HashMap<>();
@@ -156,6 +170,9 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 	public static JTextPane l_cname = new JTextPane();
 	public static JButton btn_domain_id = new JButton();
 	public static JComboBox multipleBiid = new JComboBox();
+	
+	public static JTabbedPane jtabC = new JTabbedPane();
+	public static JSplitPane collaboratorClientSplit = null;
 
 	public static JTextField biidText = new JTextField();
 	public static JTextField collabIdText = new JTextField();
@@ -168,6 +185,10 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 	/**
 	 * @wbp.parser.entryPoint
 	 */
+	
+	
+	
+	
 	public void registerExtenderCallbacks(final IBurpExtenderCallbacks callbacks) {
 		shutdown = false;
 		isSleeping = false;
@@ -305,6 +326,17 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 							BurpExtender.biidText.setText(selectedBiid);
 							BurpExtender.collabIdText.setText(selectedCollabId);
 							
+							String text = selectedCollabId;
+				               if(text.length() == 0) {
+				                  sorter.setRowFilter(null);
+				               } else {
+				                  try {
+				                     sorter.setRowFilter(RowFilter.regexFilter(text));
+				                  } catch(PatternSyntaxException pse) {
+				                        System.out.println("Bad regex pattern");
+				                  }
+				               }
+							
 						}
 						
 						
@@ -356,6 +388,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				JButton removeCurrentBiid = new JButton("Remove Biid");
 				
 				JButton filterButton = new JButton("Filter");
+				
 				JTextField filterText = new JTextField();
 				
 				filterText.setPreferredSize(new Dimension(350, 25));
@@ -365,16 +398,17 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 			        @Override
 			        public void keyPressed(KeyEvent e) {
 			            if(e.getKeyCode() == KeyEvent.VK_ENTER){
-			            	String text = filterText.getText();
-				               if(text.length() == 0) {
-				                  sorter.setRowFilter(null);
-				               } else {
-				                  try {
-				                     sorter.setRowFilter(RowFilter.regexFilter(text));
-				                  } catch(PatternSyntaxException pse) {
-				                        System.out.println("Bad regex pattern");
-				                  }
-				                }
+			               
+			               String text = filterText.getText();
+			               if(text.length() == 0) {
+			                  sorter.setRowFilter(null);
+			               } else {
+			                  try {
+			                     sorter.setRowFilter(RowFilter.regexFilter(text));
+			                  } catch(PatternSyntaxException pse) {
+			                        System.out.println("Bad regex pattern");
+			                  }
+			               }
 			            }
 			        }
 
@@ -482,6 +516,10 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				pollButton.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
+						////
+						
+						////
+						
 						pollNow = true;
 						pollNowWithFixedCollab();
 						if (isSleeping) {
@@ -542,7 +580,9 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 						int answer = JOptionPane.showConfirmDialog((Component) null,
 								"This will add new biid, are you sure?");
 						if (answer == 0) {
-
+							
+							
+							
 							// Get from custom proxy
 							String ran_collab = collaborator.generatePayload(false);
 							String ran_biid = CustomProxy.getCollabBiid(callbacks, collaborator);
@@ -585,6 +625,8 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 							biidText.setText("");
 							collabIdText.setText("");
 							btn_domain_id.setText(".oastify.com");
+							
+							// ashMap<Integer, HashMap<String, String>> interactionHistory = new HashMap<>();						
 							try {
 								saveConfigToFile();
 								loadConfigFromFile2();
@@ -639,7 +681,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 					}
 				});
 				interactionsTab = new JTabbedPane();
-				JSplitPane collaboratorClientSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+				collaboratorClientSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 				collaboratorClientSplit.setResizeWeight(.5d);
 				final Class[] classes = new Class[] { Integer.class, Long.class, String.class, String.class,
 						String.class, String.class };
@@ -738,7 +780,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 						TableModel model = (DefaultTableModel) collaboratorTable.getModel();
 						if (answer == 0) {
 							int[] row_ids = collaboratorTable.getSelectedRows();
-
+							stdout.print("RemoveId 1:");
 							for (int rowId : row_ids) {
 								int modelRow = collaboratorTable.convertRowIndexToModel(rowId);
 								int id = (int) collaboratorTable.getModel().getValueAt(modelRow, 0);
@@ -746,11 +788,15 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 								if (!readRows.contains(id)) {
 									unread--;
 								}
+								stdout.print("RemoveId:");
 								stdout.print(id);
 								// Delete in history
 								interactionHistory.remove(id);
 								// Delete in table UI
+								rowId = collaboratorTable.convertRowIndexToModel(rowId);
 								((DefaultTableModel) model).removeRow(rowId);
+								
+								
 
 								// After delete a items, need to decrease index from 1
 								for (int i = 0; i < row_ids.length; i++) {
@@ -771,7 +817,9 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 				collaboratorTable.setFillsViewportHeight(true);
 				collaboratorClientSplit.setTopComponent(collaboratorScroll);
 				collaboratorClientSplit.setBottomComponent(new JPanel());
-				panel.add(collaboratorClientSplit, BorderLayout.CENTER);
+				
+				
+			    panel.add(collaboratorClientSplit, BorderLayout.CENTER);
 				callbacks.addSuiteTab(BurpExtender.this);
 				collaborator = callbacks.createBurpCollaboratorClientContext();
 				DefaultTableCellRenderer tableCellRender = new DefaultTableCellRenderer() {
@@ -1214,6 +1262,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 						stdout.println("Debug 4");
 						if (!strItems.contains(config_collab_ids.split(", ")[i])) {
 							multipleBiid.addItem(config_collab_ids.split(", ")[i] + " - "+ config_biids.split(", ")[i]);
+							
 						}
 						
 						
@@ -1914,7 +1963,7 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 		}
 
 	}
-
+	
 	@Override
 	public void extensionUnloaded() {
 		//
@@ -1937,4 +1986,30 @@ public class BurpExtender implements IBurpExtender, ITab, IExtensionStateListene
 		}
 
 	}
-}
+
+	@Override
+	public void initialize(MontoyaApi api) {
+		// TODO Auto-generated method stub
+		Logging logging = api.logging();
+
+        // write a message to our output stream
+        logging.logToOutput("Hello MontoyaApi.");
+
+        // write a message to our error stream
+        // logging.logToError("Hello error.");
+
+        // write a message to the Burp alerts tab
+        // logging.raiseInfoEvent("Hello info event.");
+        // logging.raiseDebugEvent("Hello debug event.");
+        // logging.raiseErrorEvent("Hello error event.");
+        // logging.raiseCriticalEvent("Hello critical event.");
+
+        // throw an exception that will appear in our error stream
+        // throw new RuntimeException("Hello exception.");
+        
+        Collaborator collab = api.collaborator();
+        CollaboratorClient collab_client = collab.createClient();
+        CollaboratorPayload collab_client_payload = collab_client.generatePayload("lamscun", PayloadOption.WITHOUT_SERVER_LOCATION);
+        logging.logToOutput(collab_client_payload.toString());
+        logging.logToOutput(collab_client.getSecretKey().toString());
+	}
