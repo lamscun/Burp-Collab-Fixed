@@ -315,9 +315,9 @@ public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtens
 				multipleBiid.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						stdout.println("Debug 1");
+						// stdout.println("Debug 1");
 						if (multipleBiid.getSelectedItem().toString().contains(" - ")) {
-							stdout.println("Debug 2");
+							// stdout.println("Debug 2");
 							String selectedBiid = multipleBiid.getSelectedItem().toString().split(" - ")[1];
 							String selectedCollabId = multipleBiid.getSelectedItem().toString().split(" - ")[0];
 							btn_domain_id.setText(selectedCollabId + ".oastify.com");
@@ -780,7 +780,7 @@ public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtens
 						TableModel model = (DefaultTableModel) collaboratorTable.getModel();
 						if (answer == 0) {
 							int[] row_ids = collaboratorTable.getSelectedRows();
-							stdout.print("RemoveId 1:");
+							// stdout.print("RemoveId 1:");
 							for (int rowId : row_ids) {
 								int modelRow = collaboratorTable.convertRowIndexToModel(rowId);
 								int id = (int) collaboratorTable.getModel().getValueAt(modelRow, 0);
@@ -788,8 +788,8 @@ public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtens
 								if (!readRows.contains(id)) {
 									unread--;
 								}
-								stdout.print("RemoveId:");
-								stdout.print(id);
+								// stdout.print("RemoveId:");
+								// stdout.print(id);
 								// Delete in history
 								interactionHistory.remove(id);
 								// Delete in table UI
@@ -884,71 +884,6 @@ public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtens
 										}
 									}
 									interactionsTab.addTab("DNS query", messageEditor.getComponent());
-								} else if (interaction.get("type").equals("SMTP")) {
-									byte[] conversation = helpers.base64Decode(interaction.get("conversation"));
-									String conversationString = helpers.bytesToString(conversation);
-									String to = "";
-									String from = "";
-									String message = "";
-									Matcher m = Pattern
-											.compile("^RCPT TO:(.+?)$", Pattern.CASE_INSENSITIVE + Pattern.MULTILINE)
-											.matcher(conversationString);
-									if (m.find()) {
-										to = m.group(1).trim();
-									}
-									m = Pattern
-											.compile("^MAIL From:(.+)?$", Pattern.CASE_INSENSITIVE + Pattern.MULTILINE)
-											.matcher(conversationString);
-									if (m.find()) {
-										from = m.group(1).trim();
-									}
-									m = Pattern
-											.compile("^DATA[\\r\\n]+([\\d\\D]+)?[\\r\\n]+[.][\\r\\n]+",
-													Pattern.CASE_INSENSITIVE + Pattern.MULTILINE)
-											.matcher(conversationString);
-									if (m.find()) {
-										message = m.group(1).trim();
-									}
-									TaboratorMessageEditorController taboratorMessageEditorController = new TaboratorMessageEditorController();
-									description.setText(
-											"The Collaborator server received a SMTP connection from IP address "
-													+ interaction.get("client_ip") + " at "
-													+ interaction.get("time_stamp") + ".\n\n"
-													+ "The email details were:\n\n" + "From: " + from + "\n\n" + "To: "
-													+ to + "\n\n" + "Message: \n" + message);
-									IMessageEditor messageEditor = callbacks
-											.createMessageEditor(taboratorMessageEditorController, false);
-									messageEditor.setMessage(conversation, false);
-									if (originalRequests.containsKey(interaction.get("interaction_id"))) {
-										HashMap<String, String> requestInfo = originalRequests
-												.get(interaction.get("interaction_id"));
-										IHttpService httpService = helpers.buildHttpService(requestInfo.get("host"),
-												Integer.decode(requestInfo.get("port")), requestInfo.get("protocol"));
-										taboratorMessageEditorController.setHttpService(httpService);
-										IMessageEditor requestMessageEditor = callbacks
-												.createMessageEditor(taboratorMessageEditorController, false);
-										if (requestInfo.get("request") != null) {
-											requestMessageEditor.setMessage(
-													helpers.stringToBytes(requestInfo.get("request")), true);
-											interactionsTab.addTab("Original request",
-													requestMessageEditor.getComponent());
-										}
-										if (originalResponses.containsKey(interaction.get("interaction_id"))) {
-											taboratorMessageEditorController.setHttpService(httpService);
-											IMessageEditor responseMessageEditor = callbacks
-													.createMessageEditor(taboratorMessageEditorController, false);
-											if (requestInfo.get("request") != null && originalResponses
-													.get(interaction.get("interaction_id")) != null) {
-												responseMessageEditor.setMessage(helpers.stringToBytes(
-														originalResponses.get(interaction.get("interaction_id"))),
-														true);
-												interactionsTab.addTab("Original response",
-														responseMessageEditor.getComponent());
-											}
-										}
-									}
-									interactionsTab.addTab("SMTP Conversation", messageEditor.getComponent());
-									interactionsTab.setSelectedIndex(1);
 								} else if (interaction.get("type").equals("HTTP")) {
 
 									stdout.println(interaction);
@@ -968,7 +903,7 @@ public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtens
 										taboratorMessageEditorController.setHttpService(httpService);
 									}
 									byte[] collaboratorResponse = helpers.base64Decode(interaction.get("response"));
-									stdout.println(collaboratorResponse.toString());
+									stdout.println(helpers.bytesToString(collaboratorResponse));
 									byte[] collaboratorRequest = helpers.base64Decode(interaction.get("request"));
 									stdout.println(collaboratorRequest.toString());
 
@@ -1014,7 +949,7 @@ public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtens
 
 									IMessageEditor responseMessageEditor = callbacks
 											.createMessageEditor(taboratorMessageEditorController, false);
-									responseMessageEditor.setMessage(collaboratorResponse, true);
+									responseMessageEditor.setMessage(collaboratorResponse, false);
 									interactionsTab.addTab("Response from Collaborator",
 											responseMessageEditor.getComponent());
 
@@ -1027,6 +962,119 @@ public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtens
 									interactionsTab.setSelectedIndex(1);
 
 								}
+								else if (interaction.get("type").equals("SMTP")) {
+									Pattern pattern =  null;
+									Matcher matcher = null;
+									// stdout.println("Sender: ");
+									// stdout.println(interaction.toString());
+									byte[] conversation = helpers.base64Decode(interaction.get("conversation"));
+									String conversationString = helpers.bytesToString(conversation);
+									String boundary = "";
+									String to = "";
+									String from = "";
+									String subject= "";
+									
+									
+									if (interaction.containsKey("sender")) {
+										from = helpers.bytesToString(helpers.base64Decode(interaction.get("sender")));
+									} else {
+										from ="Error: The old record don't match with this CollabFixed version!!!, please view in SMTP conversation";
+									}
+									
+									if (interaction.containsKey("recipients")) {
+										String[] recipients = interaction.get("recipients").replace("[", "").replace("]", "").split(",");
+										for (String b64_recipients: recipients) {
+											to += helpers.bytesToString(helpers.base64Decode(b64_recipients)) + "; ";
+										}
+									} else {
+										to = "Error: The old record don't match with this CollabFixed version!!!, please view in SMTP conversation";
+									}
+									
+									pattern = Pattern.compile("Subject: (.*)");
+									matcher = pattern.matcher(conversationString);
+									if (matcher.find())
+									{
+										subject = matcher.group(1);
+									}
+									
+									pattern = Pattern.compile("boundary=\"(.*)\"");
+									matcher = pattern.matcher(conversationString);
+									if (matcher.find())
+									{
+										boundary = matcher.group(1);
+									    // System.out.println("boundary: " + boundary);
+									}
+									
+									String body_html = "";
+									body_html = conversationString.split("Content-Type: text/html;")[1].split("--"+boundary)[0];
+									
+									System.out.println("body html: "+ body_html);
+									
+									String body_plain = "";
+									body_plain = conversationString.split("Content-Type: text/plain;")[1].split("--"+boundary)[0];
+									
+									System.out.println("body plain: "+ body_plain);
+									
+									
+									TaboratorMessageEditorController taboratorMessageEditorController= new TaboratorMessageEditorController();
+									description.setText(
+											"The Collaborator server received a SMTP connection from IP address "
+													+ interaction.get("client_ip").toString() + " at "
+													+ interaction.get("time_stamp").toString() + ".\n\n"
+													+ "The email details were:\n\n" + "From: " + from + "\n\n" + "To: "
+													//+ to + "\n\n" + "Message: \n" +message);
+													+ to + "\n\n" + "Subject: "+ subject + "\n\n" );
+									IMessageEditor messageEditor = callbacks
+											.createMessageEditor(taboratorMessageEditorController, false);
+									messageEditor.setMessage(conversation, false);
+//									
+									String res = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
+									
+									TaboratorMessageEditorController taboratorMessageEditorControllerEmail= new TaboratorMessageEditorController();
+									IMessageEditor messageEditorEmailRender = callbacks
+											.createMessageEditor(taboratorMessageEditorControllerEmail, false);
+									
+									//Must set buildHttpService to able to use the render
+									IHttpService httpServiceEmail = helpers.buildHttpService("oastify.com", 443, "HTTPS");
+									taboratorMessageEditorControllerEmail.setHttpService(httpServiceEmail);
+									//Must set setRequest to able to use the render
+									taboratorMessageEditorControllerEmail.setRequest(helpers.stringToBytes("GET / HTTP/1.1"));
+									
+									taboratorMessageEditorControllerEmail.setResponse(helpers.stringToBytes(res +body_html));
+									messageEditorEmailRender.setMessage(helpers.stringToBytes(res + body_html), false);
+									
+									if (originalRequests.containsKey(interaction.get("interaction_id"))) {
+										HashMap<String, String> requestInfo = originalRequests
+												.get(interaction.get("interaction_id"));
+										IHttpService httpService = helpers.buildHttpService(requestInfo.get("host"),
+												Integer.decode(requestInfo.get("port")), requestInfo.get("protocol"));
+										taboratorMessageEditorController.setHttpService(httpService);
+										IMessageEditor requestMessageEditor = callbacks
+												.createMessageEditor(taboratorMessageEditorController, false);
+										if (requestInfo.get("request") != null) {
+											requestMessageEditor.setMessage(
+													helpers.stringToBytes(requestInfo.get("request")), true);
+											interactionsTab.addTab("Original request",
+													requestMessageEditor.getComponent());
+										}
+										if (originalResponses.containsKey(interaction.get("interaction_id"))) {
+											taboratorMessageEditorController.setHttpService(httpService);
+											IMessageEditor responseMessageEditor = callbacks
+													.createMessageEditor(taboratorMessageEditorController, false);
+											if (requestInfo.get("request") != null && originalResponses
+													.get(interaction.get("interaction_id")) != null) {
+												responseMessageEditor.setMessage(helpers.stringToBytes(
+														originalResponses.get(interaction.get("interaction_id"))),
+														true);
+												interactionsTab.addTab("Original response",
+														responseMessageEditor.getComponent());
+											}
+										}
+									}
+									 interactionsTab.addTab("SMTP Conversation", messageEditor.getComponent());
+									interactionsTab.addTab("Email Render", messageEditorEmailRender.getComponent());
+									interactionsTab.setSelectedIndex(1);
+								} 
 								description.setBorder(BorderFactory.createCompoundBorder(description.getBorder(),
 										BorderFactory.createEmptyBorder(10, 10, 10, 10)));
 								descriptionPanel.add(description);
@@ -1255,11 +1303,11 @@ public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtens
 				
 				
 				if (config_biids != "" && config_collab_ids!="" && config_biids.length()>0  && config_collab_ids.length()>0 ) {
-					stdout.println("Debug 3");
+					// stdout.println("Debug 3");
 					
 					int numberBiids = config_biids.split(", ").length;
 					for (int i = numberBiids-1; i >=0; i--) {
-						stdout.println("Debug 4");
+						// stdout.println("Debug 4");
 						if (!strItems.contains(config_collab_ids.split(", ")[i])) {
 							multipleBiid.addItem(config_collab_ids.split(", ")[i] + " - "+ config_biids.split(", ")[i]);
 							
@@ -1538,6 +1586,10 @@ public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtens
 					if (jsonData.has("conversation")) {
 						interactionHistoryItem.put("conversation",
 								jsonData.get("conversation").toString().replace("\"", ""));
+						interactionHistoryItem.put("sender",
+								jsonData.get("sender").toString().replace("\"", ""));
+						interactionHistoryItem.put("recipients",
+								jsonData.get("recipients").toString().replace("\"", ""));
 					}
 
 				}
@@ -1635,6 +1687,7 @@ public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtens
 
 	public static JSplitPane setDividerLocation(final JSplitPane splitter, final double proportion) {
 		if (splitter.isShowing()) {
+			
 			if ((splitter.getWidth() > 0) && (splitter.getHeight() > 0)) {
 				splitter.setDividerLocation(proportion);
 			} else {
@@ -2013,3 +2066,4 @@ public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtens
         logging.logToOutput(collab_client_payload.toString());
         logging.logToOutput(collab_client.getSecretKey().toString());
 	}
+}
