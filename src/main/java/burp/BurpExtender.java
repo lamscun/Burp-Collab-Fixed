@@ -47,6 +47,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -122,10 +123,14 @@ import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.collaborator.*;
 import burp.api.montoya.logging.Logging;
 
+
+import java.io.UnsupportedEncodingException;
+import java.util.Base64;
+
 /* loaded from: collab_fixed_v5.jar:burp/BurpExtender.class */
 public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtensionStateListener, IContextMenuFactory, IHttpListener, AWTEventListener   {
-	private String extensionName = "Collab_Fixed_v6.5";
-	private String extensionVersion = "6.5";
+	private String extensionName = "Collab_Fixed_v6.7";
+	private String extensionVersion = "6.7";
 	private IBurpExtenderCallbacks callbacks;
 	private IExtensionHelpers helpers;
 	private PrintWriter stderr;
@@ -182,6 +187,9 @@ public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtens
 	public static String collab_fixed_config_file_name = "collab_fixed_config.json";
 	public static String collab_fixed_logs_file_name = "collab_fixed_logs.json";
 
+	
+	private Collaborator collab;
+	
 	/**
 	 * @wbp.parser.entryPoint
 	 */
@@ -581,11 +589,20 @@ public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtens
 								"This will add new biid, are you sure?");
 						if (answer == 0) {
 							
-							
+							CollaboratorClient collab_client = collab.createClient();
+					        CollaboratorPayload collab_client_payload = collab_client.generatePayload("lamscun", PayloadOption.WITHOUT_SERVER_LOCATION);
+					        //stdout.println(collab_client_payload.toString());
+					        //stdout.println(collab_client.getSecretKey().toString());
+					        
 							
 							// Get from custom proxy
-							String ran_collab = collaborator.generatePayload(false);
-							String ran_biid = CustomProxy.getCollabBiid(callbacks, collaborator);
+							// String ran_collab = collaborator.generatePayload(false);
+							// String ran_biid = CustomProxy.getCollabBiid(callbacks, collaborator);
+							// https://github.com/PortSwigger/burp-extensions-montoya-api/blob/73369af49eac0079199b5a3a5273835036d91adf/api/src/test/java/burp/api/montoya/TestExtension.java
+							String ran_collab = collab_client_payload.toString();
+							String ran_biid = helpers.urlEncode(collab_client.getSecretKey().toString());
+									
+							
 							stdout.println("Random collab - biid: " + ran_collab + " - " + ran_biid);
 							
 							multipleBiid.addItem(ran_collab + " - " + ran_biid);
@@ -989,14 +1006,14 @@ public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtens
 									} else {
 										to = "Error: The old record don't match with this CollabFixed version!!!, please view in SMTP conversation";
 									}
-									
+									// stdout.println("Debug 1");
 									pattern = Pattern.compile("Subject: (.*)");
 									matcher = pattern.matcher(conversationString);
 									if (matcher.find())
 									{
 										subject = matcher.group(1);
 									}
-									
+									// stdout.println("Debug 2");
 									pattern = Pattern.compile("boundary=\"(.*)\"");
 									matcher = pattern.matcher(conversationString);
 									if (matcher.find())
@@ -1004,18 +1021,29 @@ public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtens
 										boundary = matcher.group(1);
 									    // System.out.println("boundary: " + boundary);
 									}
-									
+									// stdout.println("Debug 3");
 									String body_html = "";
-									body_html = conversationString.split("Content-Type: text/html;")[1].split("--"+boundary)[0];
+									
+									
+									
+									if (conversationString.contains("Content-Type: text/html;")) {
+										body_html = conversationString.split("Content-Type: text/html;")[1].split("--"+boundary)[0];
+										 body_html = body_html.replace("=\r\n", "").replace("3D'", "").replace("3D\"", "");
+									}
 									
 									System.out.println("body html: "+ body_html);
 									
 									String body_plain = "";
-									body_plain = conversationString.split("Content-Type: text/plain;")[1].split("--"+boundary)[0];
+									
+									if (conversationString.contains("Content-Type: text/plain;")) {
+										body_plain = conversationString.split("Content-Type: text/plain;")[1].split("--"+boundary)[0];
+									}
+									
+									
 									
 									System.out.println("body plain: "+ body_plain);
 									
-									
+									// stdout.println("Debug 4");
 									TaboratorMessageEditorController taboratorMessageEditorController= new TaboratorMessageEditorController();
 									description.setText(
 											"The Collaborator server received a SMTP connection from IP address "
@@ -1024,22 +1052,27 @@ public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtens
 													+ "The email details were:\n\n" + "From: " + from + "\n\n" + "To: "
 													//+ to + "\n\n" + "Message: \n" +message);
 													+ to + "\n\n" + "Subject: "+ subject + "\n\n" );
+									// stdout.println("Debug 5");
 									IMessageEditor messageEditor = callbacks
 											.createMessageEditor(taboratorMessageEditorController, false);
 									messageEditor.setMessage(conversation, false);
-//									
-									String res = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
-									
+//									stdout.println("Debug 6");
+									String res = "HTTP/1.1 200 OK\r\n"
+											+ "Server: Burp Collaborator https://burpcollaborator.net/\r\n"
+											+ "X-Collaborator-Version: 4\r\n"
+											+ "Content-Type: text/html\r\n"
+											+ "Content-Length: 5400";
+									// stdout.println("Debug 7");
 									TaboratorMessageEditorController taboratorMessageEditorControllerEmail= new TaboratorMessageEditorController();
 									IMessageEditor messageEditorEmailRender = callbacks
 											.createMessageEditor(taboratorMessageEditorControllerEmail, false);
-									
+									// stdout.println("Debug 8");
 									//Must set buildHttpService to able to use the render
-									IHttpService httpServiceEmail = helpers.buildHttpService("oastify.com", 443, "HTTPS");
+									IHttpService httpServiceEmail = helpers.buildHttpService("www.google.com", 443, "HTTPS");
 									taboratorMessageEditorControllerEmail.setHttpService(httpServiceEmail);
 									//Must set setRequest to able to use the render
 									taboratorMessageEditorControllerEmail.setRequest(helpers.stringToBytes("GET / HTTP/1.1"));
-									
+									// stdout.println("Debug 9");
 									taboratorMessageEditorControllerEmail.setResponse(helpers.stringToBytes(res +body_html));
 									messageEditorEmailRender.setMessage(helpers.stringToBytes(res + body_html), false);
 									
@@ -2060,10 +2093,7 @@ public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtens
         // throw an exception that will appear in our error stream
         // throw new RuntimeException("Hello exception.");
         
-        Collaborator collab = api.collaborator();
-        CollaboratorClient collab_client = collab.createClient();
-        CollaboratorPayload collab_client_payload = collab_client.generatePayload("lamscun", PayloadOption.WITHOUT_SERVER_LOCATION);
-        logging.logToOutput(collab_client_payload.toString());
-        logging.logToOutput(collab_client.getSecretKey().toString());
+        collab = api.collaborator();
+        
 	}
 }
