@@ -594,7 +594,7 @@ public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtens
 					        //stdout.println(collab_client_payload.toString());
 					        //stdout.println(collab_client.getSecretKey().toString());
 					        
-							
+					
 							// Get from custom proxy
 							// String ran_collab = collaborator.generatePayload(false);
 							// String ran_biid = CustomProxy.getCollabBiid(callbacks, collaborator);
@@ -606,6 +606,14 @@ public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtens
 							stdout.println("Random collab - biid: " + ran_collab + " - " + ran_biid);
 							
 							multipleBiid.addItem(ran_collab + " - " + ran_biid);
+							
+							try {
+								saveConfigToFile();
+								loadConfigFromFile2();
+							} catch (IOException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
 							
 							// BurpExtender.biidText.setText(ran_biid);
 							// BurpExtender.collabIdText.setText(ran_collab);
@@ -1311,6 +1319,8 @@ public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtens
 				
 				// new 
 				stdout.println("LoadConfigFromFile2... ");
+				
+				
 				Gson gson = new Gson();
 				// create a reader
 				Reader reader = Files.newBufferedReader(Paths.get(collab_fixed_config_file_name));
@@ -1352,6 +1362,7 @@ public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtens
 					String firstBiid = config_biids.split(", ")[0];
 					String firstCallabId = config_collab_ids.split(", ")[0];
 					
+					sorter.setRowFilter(null);
 					
 					btn_domain_id.setText(firstCallabId + ".oastify.com");
 	
@@ -1362,6 +1373,8 @@ public class BurpExtender implements BurpExtension, IBurpExtender, ITab, IExtens
 						biidText.setText(firstBiid);
 						collabIdText.setText(firstCallabId);
 					}
+					
+					
 				}
 				reader.close();
 				
